@@ -21,6 +21,10 @@ interface LibraryContextType {
 
 const LibraryContext = createContext<LibraryContextType | null>(null);
 
+function generateQRToken(seatId: string): string {
+  return `QR-${seatId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function generateInitialSeats(): Seat[] {
   const seats: Seat[] = [];
   for (let i = 1; i <= 15; i++) {
@@ -31,9 +35,9 @@ function generateInitialSeats(): Seat[] {
       currentUser: null,
       expiryTime: null,
       blockNumber: block,
+      qrToken: generateQRToken(`S${i}`),
     });
   }
-  // Simulate some occupied/reserved for demo
   seats[2].status = 'occupied';
   seats[2].currentUser = 'stu-002';
   seats[6].status = 'reserved';
@@ -183,17 +187,18 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   const addSeat = useCallback((blockNumber: number) => {
-    const blockSeats = seats.filter(s => s.blockNumber === blockNumber);
     const maxNum = Math.max(...seats.map(s => parseInt(s.seatId.replace('S', ''))), 0);
+    const seatId = `S${maxNum + 1}`;
     const newSeat: Seat = {
-      seatId: `S${maxNum + 1}`,
+      seatId,
       status: 'available',
       currentUser: null,
       expiryTime: null,
       blockNumber,
+      qrToken: generateQRToken(seatId),
     };
     setSeats(prev => [...prev, newSeat]);
-    toast({ title: 'Seat added', description: `${newSeat.seatId} added to Block ${blockNumber}.` });
+    toast({ title: 'Seat added', description: `${newSeat.seatId} added to Block ${blockNumber} with unique QR code.` });
   }, [seats, toast]);
 
   const removeSeat = useCallback((seatId: string) => {

@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useLibrary } from '@/contexts/LibraryContext';
 import Header from '@/components/Header';
 import SeatMap from '@/components/SeatMap';
+import AdminSeatQRCodes from '@/components/AdminSeatQRCodes';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
-import { Armchair, Users, Clock, AlertTriangle, Plus, Trash2, TrendingUp, Activity } from 'lucide-react';
+import { Armchair, Users, Clock, AlertTriangle, Plus, Trash2, TrendingUp, Activity, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -42,9 +43,10 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <Tabs defaultValue="map" className="w-full">
-          <TabsList className="w-full grid grid-cols-4 mb-4">
+          <TabsList className="w-full grid grid-cols-5 mb-4">
             <TabsTrigger value="map">Floor Map</TabsTrigger>
             <TabsTrigger value="manage">Manage</TabsTrigger>
+            <TabsTrigger value="qrcodes" className="gap-1"><QrCode className="w-3.5 h-3.5" /> QR Codes</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
@@ -93,6 +95,10 @@ const AdminDashboard: React.FC = () => {
                 ))}
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="qrcodes">
+            <AdminSeatQRCodes seats={seats} />
           </TabsContent>
 
           <TabsContent value="analytics">

@@ -16,6 +16,7 @@ export interface Seat {
   currentUser: string | null;
   expiryTime: string | null;
   blockNumber: number;
+  qrToken: string;
 }
 
 export interface Booking {

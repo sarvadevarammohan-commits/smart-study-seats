@@ -21,17 +21,27 @@ interface QRCheckInProps {
 
 const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
   const { user } = useAuth();
-  const { checkIn } = useLibrary();
+  const { checkIn, seats } = useLibrary();
   const [scanned, setScanned] = useState(false);
 
   const pendingBooking = bookings.find(b => !b.checkedIn);
 
   const handleSimulateScan = () => {
-    if (pendingBooking && user) {
-      const success = checkIn(pendingBooking.seatId, user.userId);
-      if (success) setScanned(true);
+    if (!pendingBooking || !user) return;
+
+    // Find the seat and validate its QR token exists (seat not deleted)
+    const seat = seats.find(s => s.seatId === pendingBooking.seatId);
+    if (!seat) {
+      return; // Seat was deleted — QR is invalid
     }
+
+    const success = checkIn(pendingBooking.seatId, user.userId);
+    if (success) setScanned(true);
   };
+
+  const seatForBooking = pendingBooking
+    ? seats.find(s => s.seatId === pendingBooking.seatId)
+    : null;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -48,6 +58,8 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
 
         {!pendingBooking ? (
           <p className="text-sm text-muted-foreground py-4">No pending bookings to check in.</p>
+        ) : !seatForBooking ? (
+          <p className="text-sm text-destructive py-4">This seat has been removed. QR code is no longer valid.</p>
         ) : scanned ? (
           <div className="py-6 flex flex-col items-center gap-3">
             <CheckCircle2 className="w-16 h-16 text-primary" />
@@ -60,9 +72,8 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
             <div className="p-4 bg-card rounded-xl border border-border">
               <QRCodeSVG
                 value={JSON.stringify({
-                  seatId: pendingBooking.seatId,
-                  token: `sec-${pendingBooking.bookingId}`,
-                  userId: user?.userId,
+                  seatId: seatForBooking.seatId,
+                  qrToken: seatForBooking.qrToken,
                 })}
                 size={180}
                 level="H"
