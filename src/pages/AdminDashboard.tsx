@@ -52,7 +52,7 @@ const AdminDashboard: React.FC = () => {
           </TabsList>
 
           <TabsContent value="map">
-            <SeatMap seats={seats} onSeatClick={() => {}} />
+            <SeatMap seats={seats} onSeatClick={() => {}} bookings={bookings} />
           </TabsContent>
 
           <TabsContent value="manage">
