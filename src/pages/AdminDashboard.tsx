@@ -43,9 +43,10 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <Tabs defaultValue="map" className="w-full">
-          <TabsList className="w-full grid grid-cols-4 mb-4">
+          <TabsList className="w-full grid grid-cols-5 mb-4">
             <TabsTrigger value="map">Floor Map</TabsTrigger>
             <TabsTrigger value="manage">Manage</TabsTrigger>
+            <TabsTrigger value="qrcodes" className="gap-1"><QrCode className="w-3.5 h-3.5" /> QR Codes</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
