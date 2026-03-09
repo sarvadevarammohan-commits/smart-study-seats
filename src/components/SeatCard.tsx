@@ -35,6 +35,7 @@ const SeatCard: React.FC<SeatCardProps> = ({ seat, onClick, index, booking }) =>
         </div>
       )}
     </motion.button>
+  );
 };
 
 export default SeatCard;
