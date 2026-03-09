@@ -31,7 +31,7 @@ const StudentDashboard: React.FC = () => {
         </div>
 
         {/* Seat Map */}
-        <SeatMap seats={seats} onSeatClick={s => s.status === 'available' && setSelectedSeat(s)} />
+        <SeatMap seats={seats} onSeatClick={s => s.status === 'available' && setSelectedSeat(s)} bookings={bookings} />
 
         {/* My Bookings */}
         <MyBookings

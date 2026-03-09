@@ -52,7 +52,7 @@ const AdminDashboard: React.FC = () => {
           </TabsList>
 
           <TabsContent value="map">
-            <SeatMap seats={seats} onSeatClick={() => {}} />
+            <SeatMap seats={seats} onSeatClick={() => {}} bookings={bookings} />
           </TabsContent>
 
           <TabsContent value="manage">
@@ -201,10 +201,19 @@ const AdminDashboard: React.FC = () => {
                 <div className="space-y-2">
                   {bookings.map(b => (
                     <div key={b.bookingId} className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/50 border border-border text-sm">
-                      <span className="font-medium text-foreground">{b.seatId}</span>
-                      <span className="text-muted-foreground">{b.userName || b.userId}</span>
-                      <span className={b.checkedIn ? 'text-primary' : 'text-seat-reserved'}>
-                        {b.checkedIn ? 'Checked In' : 'Pending'}
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-md flex items-center justify-center text-xs font-bold ${b.checkedIn ? 'bg-seat-occupied' : 'bg-seat-reserved'} text-primary-foreground`}>
+                          {b.seatId}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{b.userName || b.userId}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(b.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} — {new Date(b.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${b.checkedIn ? 'bg-primary/20 text-primary' : 'bg-seat-reserved/20 text-seat-reserved'}`}>
+                        {b.checkedIn ? 'Checked In' : 'Pending Check-in'}
                       </span>
                     </div>
                   ))}

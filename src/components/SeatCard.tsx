@@ -1,14 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Seat } from '@/types/library';
+import { Seat, Booking } from '@/types/library';
 
 interface SeatCardProps {
   seat: Seat;
   onClick: (seat: Seat) => void;
   index: number;
+  booking?: Booking;
 }
 
-const SeatCard: React.FC<SeatCardProps> = ({ seat, onClick, index }) => {
+const SeatCard: React.FC<SeatCardProps> = ({ seat, onClick, index, booking }) => {
   const statusClass = `seat-${seat.status}`;
 
   return (
@@ -20,12 +21,19 @@ const SeatCard: React.FC<SeatCardProps> = ({ seat, onClick, index }) => {
       whileTap={seat.status === 'available' ? { scale: 0.95 } : {}}
       onClick={() => onClick(seat)}
       disabled={seat.status !== 'available'}
-      className={`seat-card ${statusClass} w-full aspect-square flex flex-col items-center justify-center min-h-[60px] ${
+      className={`seat-card ${statusClass} w-full flex flex-col items-center justify-center min-h-[70px] py-1.5 ${
         seat.status === 'available' ? 'animate-pulse-green' : ''
       }`}
     >
       <span className="text-sm font-bold">{seat.seatId}</span>
-      <span className="text-[10px] opacity-80 capitalize mt-0.5">{seat.status}</span>
+      <span className="text-[10px] opacity-80 capitalize">{seat.status}</span>
+      {booking && seat.status !== 'available' && (
+        <div className="text-[8px] opacity-70 leading-tight mt-0.5 text-center">
+          <span>{new Date(booking.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <span> - </span>
+          <span>{new Date(booking.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      )}
     </motion.button>
   );
 };
