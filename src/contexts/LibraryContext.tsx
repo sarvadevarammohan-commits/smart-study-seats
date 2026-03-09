@@ -106,7 +106,7 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return bookings.filter(b => b.userId === userId && new Date(b.startTime).toDateString() === today);
   }, [bookings]);
 
-  const bookSeat = useCallback((seatId: string, userId: string, userName: string): boolean => {
+  const bookSeat = useCallback((seatId: string, userId: string, userName: string, durationHours: number = 1): boolean => {
     const seat = seats.find(s => s.seatId === seatId);
     if (!seat || seat.status !== 'available') {
       toast({ title: 'Booking failed', description: 'Seat is not available.', variant: 'destructive' });
@@ -120,7 +120,7 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     const now = new Date();
-    const endTime = new Date(now.getTime() + 60 * 60000); // 1 hour
+    const endTime = new Date(now.getTime() + durationHours * 60 * 60000);
     const checkInDeadline = new Date(now.getTime() + 10 * 60000); // 10 min
 
     setSeats(prev => prev.map(s =>
@@ -140,7 +140,7 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     setBookings(prev => [...prev, newBooking]);
 
-    toast({ title: '✅ Seat booked!', description: `${seatId} reserved for 1 hour. Check in within 10 min.` });
+    toast({ title: '✅ Seat booked!', description: `${seatId} reserved for ${durationHours} hr${durationHours > 1 ? 's' : ''}. Check in within 10 min.` });
     return true;
   }, [seats, getUserBookingsToday, toast]);
 
