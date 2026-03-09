@@ -21,6 +21,10 @@ interface LibraryContextType {
 
 const LibraryContext = createContext<LibraryContextType | null>(null);
 
+function generateQRToken(seatId: string): string {
+  return `QR-${seatId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function generateInitialSeats(): Seat[] {
   const seats: Seat[] = [];
   for (let i = 1; i <= 15; i++) {
@@ -31,9 +35,9 @@ function generateInitialSeats(): Seat[] {
       currentUser: null,
       expiryTime: null,
       blockNumber: block,
+      qrToken: generateQRToken(`S${i}`),
     });
   }
-  // Simulate some occupied/reserved for demo
   seats[2].status = 'occupied';
   seats[2].currentUser = 'stu-002';
   seats[6].status = 'reserved';
