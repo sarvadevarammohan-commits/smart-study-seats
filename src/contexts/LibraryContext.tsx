@@ -6,7 +6,7 @@ interface LibraryContextType {
   seats: Seat[];
   bookings: Booking[];
   userBookingsToday: Booking[];
-  bookSeat: (seatId: string, userId: string, userName: string, durationHours?: number) => boolean;
+  bookSeat: (seatId: string, userId: string, userName: string, durationHours?: number, startDate?: Date, endDate?: Date) => boolean;
   checkIn: (seatId: string, userId: string) => boolean;
   cancelBooking: (bookingId: string) => void;
   releaseSeat: (seatId: string) => void;
