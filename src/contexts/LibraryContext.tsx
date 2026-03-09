@@ -6,7 +6,7 @@ interface LibraryContextType {
   seats: Seat[];
   bookings: Booking[];
   userBookingsToday: Booking[];
-  bookSeat: (seatId: string, userId: string, userName: string, durationHours?: number) => boolean;
+  bookSeat: (seatId: string, userId: string, userName: string, durationHours?: number, startDate?: Date, endDate?: Date) => boolean;
   checkIn: (seatId: string, userId: string) => boolean;
   cancelBooking: (bookingId: string) => void;
   releaseSeat: (seatId: string) => void;
@@ -106,7 +106,7 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return bookings.filter(b => b.userId === userId && new Date(b.startTime).toDateString() === today);
   }, [bookings]);
 
-  const bookSeat = useCallback((seatId: string, userId: string, userName: string, durationHours: number = 1): boolean => {
+  const bookSeat = useCallback((seatId: string, userId: string, userName: string, durationHours?: number, startDate?: Date, endDate?: Date): boolean => {
     const seat = seats.find(s => s.seatId === seatId);
     if (!seat || seat.status !== 'available') {
       toast({ title: 'Booking failed', description: 'Seat is not available.', variant: 'destructive' });
@@ -120,8 +120,9 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     const now = new Date();
-    const endTime = new Date(now.getTime() + durationHours * 60 * 60000);
-    const checkInDeadline = new Date(now.getTime() + 10 * 60000); // 10 min
+    const startTime = startDate || now;
+    const endTime = endDate || new Date(now.getTime() + (durationHours || 1) * 60 * 60000);
+    const checkInDeadline = new Date(startTime.getTime() + 10 * 60000); // 10 min from start
 
     setSeats(prev => prev.map(s =>
       s.seatId === seatId
@@ -133,14 +134,16 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       bookingId: `BK-${Date.now()}`,
       userId,
       seatId,
-      startTime: now.toISOString(),
+      startTime: startTime.toISOString(),
       endTime: endTime.toISOString(),
       checkedIn: false,
       userName,
     };
     setBookings(prev => [...prev, newBooking]);
 
-    toast({ title: '✅ Seat booked!', description: `${seatId} reserved for ${durationHours} hr${durationHours > 1 ? 's' : ''}. Check in within 10 min.` });
+    const durMins = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
+    const durLabel = durMins >= 60 ? `${(durMins / 60).toFixed(1).replace('.0', '')} hr${durMins > 60 ? 's' : ''}` : `${durMins} min`;
+    toast({ title: '✅ Seat booked!', description: `${seatId} reserved for ${durLabel}. Check in within 10 min of start.` });
     return true;
   }, [seats, getUserBookingsToday, toast]);
 
