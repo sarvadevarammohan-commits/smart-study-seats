@@ -97,6 +97,10 @@ const AdminDashboard: React.FC = () => {
             </div>
           </TabsContent>
 
+          <TabsContent value="qrcodes">
+            <AdminSeatQRCodes seats={seats} />
+          </TabsContent>
+
           <TabsContent value="analytics">
             <div className="space-y-4">
               {/* Occupancy Trend */}
