@@ -187,17 +187,18 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, []);
 
   const addSeat = useCallback((blockNumber: number) => {
-    const blockSeats = seats.filter(s => s.blockNumber === blockNumber);
     const maxNum = Math.max(...seats.map(s => parseInt(s.seatId.replace('S', ''))), 0);
+    const seatId = `S${maxNum + 1}`;
     const newSeat: Seat = {
-      seatId: `S${maxNum + 1}`,
+      seatId,
       status: 'available',
       currentUser: null,
       expiryTime: null,
       blockNumber,
+      qrToken: generateQRToken(seatId),
     };
     setSeats(prev => [...prev, newSeat]);
-    toast({ title: 'Seat added', description: `${newSeat.seatId} added to Block ${blockNumber}.` });
+    toast({ title: 'Seat added', description: `${newSeat.seatId} added to Block ${blockNumber} with unique QR code.` });
   }, [seats, toast]);
 
   const removeSeat = useCallback((seatId: string) => {
