@@ -1,10 +1,64 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types/library';
 import { motion } from 'framer-motion';
-import { BookOpen, Shield, Mail, Lock, ArrowRight } from 'lucide-react';
+import { BookOpen, Shield, Mail, Lock, ArrowRight, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+
+function generateCaptcha(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+const CaptchaCanvas: React.FC<{ code: string }> = ({ code }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Background
+    ctx.fillStyle = 'hsl(160, 20%, 12%)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Noise lines
+    for (let i = 0; i < 5; i++) {
+      ctx.strokeStyle = `hsl(${Math.random() * 360}, 50%, 40%)`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+      ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+      ctx.stroke();
+    }
+
+    // Noise dots
+    for (let i = 0; i < 30; i++) {
+      ctx.fillStyle = `hsl(${Math.random() * 360}, 50%, 50%)`;
+      ctx.beginPath();
+      ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Text
+    const colors = ['hsl(160, 84%, 55%)', 'hsl(45, 90%, 65%)', 'hsl(200, 80%, 60%)', 'hsl(340, 70%, 60%)', 'hsl(120, 60%, 55%)'];
+    code.split('').forEach((char, i) => {
+      ctx.save();
+      ctx.font = `bold ${20 + Math.random() * 6}px monospace`;
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.translate(20 + i * 28, 30 + Math.random() * 8);
+      ctx.rotate((Math.random() - 0.5) * 0.4);
+      ctx.fillText(char, 0, 0);
+      ctx.restore();
+    });
+  }, [code]);
+
+  return <canvas ref={canvasRef} width={170} height={45} className="rounded-md border border-border" />;
+};
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -13,10 +67,24 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [captchaCode, setCaptchaCode] = useState(generateCaptcha);
+  const [captchaInput, setCaptchaInput] = useState('');
+
+  const refreshCaptcha = useCallback(() => {
+    setCaptchaCode(generateCaptcha());
+    setCaptchaInput('');
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!role) return;
+
+    if (captchaInput !== captchaCode) {
+      setError('Incorrect captcha. Please try again.');
+      refreshCaptcha();
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -26,10 +94,12 @@ const LoginPage: React.FC = () => {
       setError('Login failed');
     }
     setLoading(false);
+    refreshCaptcha();
   };
 
   const fillDemo = (r: UserRole) => {
     setRole(r);
+    refreshCaptcha();
     if (r === 'student') {
       setEmail('student@college.edu');
       setPassword('demo123');
@@ -107,7 +177,7 @@ const LoginPage: React.FC = () => {
             <div className="flex items-center gap-2 mb-2">
               <button
                 type="button"
-                onClick={() => setRole(null)}
+                onClick={() => { setRole(null); setError(''); }}
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 ← Back
@@ -145,9 +215,30 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Captcha */}
+            <div className="space-y-2">
+              <label className="text-xs font-medium text-muted-foreground">Verify you're human</label>
+              <div className="flex items-center gap-2">
+                <CaptchaCanvas code={captchaCode} />
+                <Button type="button" variant="ghost" size="icon" onClick={refreshCaptcha} className="h-8 w-8 shrink-0">
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </div>
+              <Input
+                type="text"
+                value={captchaInput}
+                onChange={e => setCaptchaInput(e.target.value)}
+                placeholder="Type the captcha above"
+                required
+                maxLength={5}
+                className="font-mono tracking-widest"
+                autoComplete="off"
+              />
+            </div>
+
             {error && <p className="text-xs text-destructive">{error}</p>}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || captchaInput.length < 5}>
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
 
