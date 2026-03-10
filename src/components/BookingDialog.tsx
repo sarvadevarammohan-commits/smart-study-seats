@@ -22,8 +22,9 @@ interface BookingDialogProps {
 
 function generateTimeSlots(): string[] {
   const slots: string[] = [];
-  for (let h = 7; h <= 21; h++) {
+  for (let h = 8; h <= 19; h++) {
     for (let m = 0; m < 60; m += 30) {
+      if (h === 19 && m > 0) break; // cap at 7:00 PM
       slots.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
     }
   }
