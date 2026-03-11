@@ -18,10 +18,10 @@ const Header: React.FC = () => {
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-border bg-card/90 backdrop-blur-xl shadow-sm">
       <div className="container max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--gradient-hero)' }}>
             <BookOpen className="w-4 h-4 text-primary-foreground" />
           </div>
           <div>
