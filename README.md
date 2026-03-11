@@ -1,73 +1,77 @@
-# Welcome to your Lovable project
+📚 AI Library Seat Monitoring System
+📌 Project Overview
+The AI Library Seat Monitoring System is a web application designed to monitor and visualize seat availability in a library in real time.
+The system analyzes live CCTV footage and represents the occupancy status of seats in a simple layout interface where:
+❌ indicates occupied seat
+✅ indicates available seat
+This helps students quickly find free seats without walking around the entire library.
+This project was developed as part of my exploration in AI-based real-time monitoring systems and smart campus solutions.
+🚀 Features
+🧠 AI-based seat detection
+📷 Integration with live CCTV feed
+🗺️ Library layout visualization
+⚡ Real-time seat availability updates
+📱 Responsive web interface
+📊 Simple visual indicators for occupancy
+🛠️ Technologies Used
+React – Frontend framework
+TypeScript – Type-safe development
+Vite – Fast development environment
+Tailwind CSS – Modern UI styling
+shadcn/ui – UI components
+Additional tools used during development:
+Git & GitHub – Version control
+AI coding assistants (Lovable, etc.) – Used to accelerate development and UI generation
+🧠 My Contribution
+In this project, I:
+Designed the idea and system workflow
+Created the library seating layout model
+Implemented the frontend interface
+Integrated seat visualization logic
+Managed GitHub version control and commits
+Used AI tools as coding assistance to speed up UI generation and debugging
+📂 Project Structure
+Copy code
 
-## Project info
+library-seat-monitor/
+│
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── hooks/
+│   ├── utils/
+│
+├── public/
+├── package.json
+└── README.md
+⚙️ Installation & Running Locally
+Make sure Node.js and npm are installed.
+Bash
+Copy code
+# Clone repository
+git clone <YOUR_GITHUB_REPO_URL>
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+# Go to project folder
+cd library-seat-monitor
 
-## How can I edit this code?
+# Install dependencies
+npm install
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Run development server
 npm run dev
-```
+Then open:
+Copy code
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+http://localhost:5173
+🌐 Future Improvements
+Full AI computer vision model for automatic seat detection
+Live CCTV stream processing
+Mobile application version
+Admin dashboard for library staff
+Analytics for peak usage hours
+🎯 Use Case
+This project demonstrates how AI + Web Technology can be used to build Smart Campus Infrastructure, helping students easily find available seating in crowded libraries.
+👨‍💻 Author
+BTech CSE (AI & Data Science) Student
+Passionate about AI, automation, and smart systems
+GitHub:https://studyflow-reserve.lovable.app
