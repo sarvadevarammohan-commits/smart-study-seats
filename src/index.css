@@ -6,57 +6,60 @@
 
 @layer base {
   :root {
-    --background: 220 20% 97%;
-    --foreground: 220 25% 10%;
+    --background: 240 20% 97%;
+    --foreground: 230 25% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
+    --card-foreground: 230 25% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
+    --popover-foreground: 230 25% 12%;
 
-    --primary: 160 84% 39%;
+    --primary: 162 72% 42%;
     --primary-foreground: 0 0% 100%;
+    --primary-glow: 175 65% 38%;
 
-    --secondary: 220 16% 93%;
-    --secondary-foreground: 220 25% 10%;
+    --secondary: 230 30% 94%;
+    --secondary-foreground: 230 25% 12%;
 
-    --muted: 220 16% 93%;
-    --muted-foreground: 220 10% 46%;
+    --muted: 230 20% 94%;
+    --muted-foreground: 230 10% 44%;
 
-    --accent: 220 16% 93%;
-    --accent-foreground: 220 25% 10%;
+    --accent: 250 60% 96%;
+    --accent-foreground: 250 50% 40%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 160 84% 39%;
+    --border: 230 20% 90%;
+    --input: 230 20% 90%;
+    --ring: 162 72% 42%;
 
     --radius: 0.75rem;
 
     /* Custom tokens */
-    --seat-available: 160 84% 39%;
-    --seat-occupied: 0 72% 51%;
+    --seat-available: 162 72% 42%;
+    --seat-occupied: 0 72% 55%;
     --seat-reserved: 38 92% 50%;
-    --table-surface: 220 16% 85%;
+    --table-surface: 240 25% 92%;
     --surface-elevated: 0 0% 100%;
-    --gradient-hero: linear-gradient(135deg, hsl(160 84% 39%), hsl(170 80% 30%));
-    --gradient-admin: linear-gradient(135deg, hsl(250 60% 50%), hsl(270 70% 45%));
-    --shadow-card: 0 1px 3px 0 hsl(220 25% 10% / 0.06), 0 1px 2px -1px hsl(220 25% 10% / 0.06);
-    --shadow-elevated: 0 10px 25px -5px hsl(220 25% 10% / 0.08), 0 8px 10px -6px hsl(220 25% 10% / 0.04);
+    --gradient-hero: linear-gradient(135deg, hsl(162 72% 42%), hsl(190 70% 42%));
+    --gradient-admin: linear-gradient(135deg, hsl(250 60% 55%), hsl(280 65% 50%));
+    --gradient-accent: linear-gradient(135deg, hsl(250 60% 96%), hsl(200 60% 96%));
+    --shadow-card: 0 1px 3px 0 hsl(230 40% 30% / 0.06), 0 1px 2px -1px hsl(230 40% 30% / 0.04);
+    --shadow-elevated: 0 10px 30px -5px hsl(230 40% 30% / 0.1), 0 8px 12px -6px hsl(230 40% 30% / 0.05);
+    --shadow-glow: 0 0 20px hsl(162 72% 42% / 0.15);
     --font-display: 'Space Grotesk', sans-serif;
     --font-body: 'Inter', sans-serif;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 240 20% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent: 250 60% 96%;
     --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-border: 230 20% 90%;
+    --sidebar-ring: 162 72% 42%;
   }
 
   .dark {
@@ -124,25 +127,25 @@
   }
 
   .seat-available {
-    background-color: hsl(var(--seat-available));
+    background: linear-gradient(135deg, hsl(var(--seat-available)), hsl(175 65% 38%));
     color: hsl(0 0% 100%);
   }
 
   .seat-available:hover {
-    background-color: hsl(160 84% 33%);
+    background: linear-gradient(135deg, hsl(162 72% 36%), hsl(175 65% 32%));
     transform: translateY(-2px);
-    box-shadow: var(--shadow-elevated);
+    box-shadow: var(--shadow-elevated), var(--shadow-glow);
   }
 
   .seat-occupied {
-    background-color: hsl(var(--seat-occupied));
+    background: linear-gradient(135deg, hsl(var(--seat-occupied)), hsl(15 65% 50%));
     color: hsl(0 0% 100%);
     cursor: not-allowed;
     opacity: 0.85;
   }
 
   .seat-reserved {
-    background-color: hsl(var(--seat-reserved));
+    background: linear-gradient(135deg, hsl(var(--seat-reserved)), hsl(28 85% 50%));
     color: hsl(0 0% 100%);
     cursor: not-allowed;
   }
@@ -158,8 +161,31 @@
     box-shadow: var(--shadow-card);
   }
 
+  :root .glass-card {
+    background: linear-gradient(135deg, hsl(0 0% 100%), hsl(240 20% 99%));
+  }
+
   .stat-card {
-    @apply glass-card p-5 flex flex-col gap-1;
+    @apply glass-card p-5 flex flex-col gap-1 relative overflow-hidden;
+  }
+
+  :root .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--gradient-hero);
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+
+  :root .stat-card:nth-child(2)::before {
+    background: linear-gradient(90deg, hsl(38 92% 50%), hsl(28 85% 50%));
+  }
+
+  :root .stat-card:nth-child(3)::before {
+    background: linear-gradient(90deg, hsl(0 72% 55%), hsl(15 65% 50%));
   }
 
   .font-display {
