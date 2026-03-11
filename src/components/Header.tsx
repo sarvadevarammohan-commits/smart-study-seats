@@ -26,11 +26,7 @@ const Header: React.FC = () => {
           </div>
           <div>
             <h1 className="text-sm font-display font-bold text-foreground leading-none">Smart Library</h1>
-            <p className="text-[10px] text-muted-foreground">
-              {user?.name} • {user?.role}
-              {user?.branch && ` • ${user.branch}`}
-              {user?.year && ` • ${user.year}`}
-            </p>
+            <p className="text-[10px] text-muted-foreground">{user?.name} • {user?.role}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
