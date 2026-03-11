@@ -18,6 +18,8 @@ const MOCK_USERS: Record<string, User> = {
     rollNumber: '22CS101',
     role: 'student',
     dailyBookingCount: 0,
+    branch: 'Computer Science',
+    year: '3rd Year',
   },
   'admin@library.edu': {
     userId: 'adm-001',
