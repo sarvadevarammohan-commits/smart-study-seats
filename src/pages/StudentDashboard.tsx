@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLibrary } from '@/contexts/LibraryContext';
 import { Seat } from '@/types/library';
@@ -8,21 +8,43 @@ import MyBookings from '@/components/MyBookings';
 import QRCheckIn from '@/components/QRCheckIn';
 import Header from '@/components/Header';
 import { motion } from 'framer-motion';
-import { Armchair, Clock, CalendarCheck } from 'lucide-react';
+import { Armchair, Clock, CalendarCheck, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
   const { seats, bookings, getStats } = useLibrary();
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [showQR, setShowQR] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const { toast } = useToast();
 
   const stats = getStats();
   const myBookings = bookings.filter(b => b.userId === user?.userId);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simulate data refresh
+    setTimeout(() => {
+      setRefreshing(false);
+      toast({ title: 'Refreshed', description: 'Seat data updated successfully.' });
+    }, 600);
+  }, [toast]);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container max-w-5xl mx-auto px-4 py-6 space-y-6">
+        {/* Refresh bar */}
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">Welcome back, <span className="font-semibold text-foreground">{user?.name}</span></p>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-1.5">
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <StatCard icon={<Armchair className="w-5 h-5 text-primary" />} label="Available" value={stats.available} />

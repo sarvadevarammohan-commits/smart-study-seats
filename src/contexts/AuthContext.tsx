@@ -30,28 +30,40 @@ const MOCK_USERS: Record<string, User> = {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('library_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
 
   const login = useCallback(async (email: string, _password: string, role: UserRole): Promise<boolean> => {
     // Mock authentication
     const mockUser = MOCK_USERS[email];
+    let loggedInUser: User;
     if (mockUser && mockUser.role === role) {
-      setUser(mockUser);
-      return true;
+      loggedInUser = mockUser;
+    } else {
+      loggedInUser = {
+        userId: `user-${Date.now()}`,
+        name: email.split('@')[0],
+        email,
+        rollNumber: role === 'student' ? 'DEMO' : 'ADMIN',
+        role,
+        dailyBookingCount: 0,
+      };
     }
-    // Allow any login for demo
-    setUser({
-      userId: `user-${Date.now()}`,
-      name: email.split('@')[0],
-      email,
-      rollNumber: role === 'student' ? 'DEMO' : 'ADMIN',
-      role,
-      dailyBookingCount: 0,
-    });
+    setUser(loggedInUser);
+    localStorage.setItem('library_user', JSON.stringify(loggedInUser));
     return true;
   }, []);
 
-  const logout = useCallback(() => setUser(null), []);
+  const logout = useCallback(() => {
+    setUser(null);
+    localStorage.removeItem('library_user');
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
