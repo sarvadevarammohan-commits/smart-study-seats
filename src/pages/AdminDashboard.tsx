@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useLibrary } from '@/contexts/LibraryContext';
+import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
 import SeatMap from '@/components/SeatMap';
 import AdminSeatQRCodes from '@/components/AdminSeatQRCodes';
