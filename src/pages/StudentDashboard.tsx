@@ -38,7 +38,10 @@ const StudentDashboard: React.FC = () => {
       <main className="container max-w-5xl mx-auto px-4 py-6 space-y-6">
         {/* Refresh bar */}
         <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">Welcome back, <span className="font-semibold text-foreground">{user?.name}</span></p>
+          <div className="flex flex-col">
+            <p className="text-sm text-muted-foreground">Welcome back, <span className="font-semibold text-foreground">{user?.name}</span></p>
+            <p className="text-xs text-muted-foreground">{user?.branch} · {user?.year} · Roll: {user?.rollNumber}</p>
+          </div>
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-1.5">
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
             {refreshing ? 'Refreshing...' : 'Refresh'}

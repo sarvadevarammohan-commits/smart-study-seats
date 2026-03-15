@@ -56,6 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         rollNumber: role === 'student' ? 'DEMO' : 'ADMIN',
         role,
         dailyBookingCount: 0,
+        ...(role === 'student' ? { branch: 'General', year: '1st Year' } : { subject: 'General' }),
       };
     }
     setUser(loggedInUser);
