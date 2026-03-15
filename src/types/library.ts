@@ -8,6 +8,9 @@ export interface User {
   rollNumber: string;
   role: UserRole;
   dailyBookingCount: number;
+  branch?: string;
+  year?: string;
+  subject?: string;
 }
 
 export interface Seat {

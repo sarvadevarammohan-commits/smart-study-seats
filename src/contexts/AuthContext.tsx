@@ -18,6 +18,8 @@ const MOCK_USERS: Record<string, User> = {
     rollNumber: '22CS101',
     role: 'student',
     dailyBookingCount: 0,
+    branch: 'CSE (AI & Data Science)',
+    year: '3rd Year',
   },
   'admin@library.edu': {
     userId: 'adm-001',
@@ -26,6 +28,7 @@ const MOCK_USERS: Record<string, User> = {
     rollNumber: 'ADMIN',
     role: 'admin',
     dailyBookingCount: 0,
+    subject: 'Artificial Intelligence',
   },
 };
 
@@ -53,6 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         rollNumber: role === 'student' ? 'DEMO' : 'ADMIN',
         role,
         dailyBookingCount: 0,
+        ...(role === 'student' ? { branch: 'General', year: '1st Year' } : { subject: 'General' }),
       };
     }
     setUser(loggedInUser);
