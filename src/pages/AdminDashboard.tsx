@@ -36,11 +36,7 @@ const AdminDashboard: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container max-w-5xl mx-auto px-4 py-6 space-y-6">
-        {/* Admin Info */}
-        <div className="flex flex-col">
-          <p className="text-sm text-muted-foreground">Welcome, <span className="font-semibold text-foreground">{user?.name}</span></p>
-          <p className="text-xs text-muted-foreground">Subject: {user?.subject || 'N/A'}</p>
-        </div>
+        <p className="text-sm text-muted-foreground">Welcome, <span className="font-semibold text-foreground">{user?.name}</span></p>
         {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <AdminStat icon={<Armchair className="w-5 h-5 text-primary" />} label="Total Seats" value={stats.total} />
