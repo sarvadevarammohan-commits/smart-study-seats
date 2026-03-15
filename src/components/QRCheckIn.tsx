@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Booking } from '@/types/library';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLibrary } from '@/contexts/LibraryContext';
@@ -11,7 +11,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { QRCodeSVG } from 'qrcode.react';
-import { CheckCircle2, ScanLine } from 'lucide-react';
+import { CheckCircle2, ScanLine, Camera, CameraOff, Zap } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
+import { useToast } from '@/hooks/use-toast';
 
 interface QRCheckInProps {
   open: boolean;
@@ -23,28 +25,89 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
   const { user } = useAuth();
   const { checkIn, seats } = useLibrary();
   const [scanned, setScanned] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const { toast } = useToast();
 
   const pendingBooking = bookings.find(b => !b.checkedIn);
-
-  const handleSimulateScan = () => {
-    if (!pendingBooking || !user) return;
-
-    // Find the seat and validate its QR token exists (seat not deleted)
-    const seat = seats.find(s => s.seatId === pendingBooking.seatId);
-    if (!seat) {
-      return; // Seat was deleted — QR is invalid
-    }
-
-    const success = checkIn(pendingBooking.seatId, user.userId);
-    if (success) setScanned(true);
-  };
-
   const seatForBooking = pendingBooking
     ? seats.find(s => s.seatId === pendingBooking.seatId)
     : null;
 
+  const processQrData = (decodedText: string) => {
+    if (!pendingBooking || !user) return;
+    try {
+      const data = JSON.parse(decodedText);
+      const seat = seats.find(s => s.seatId === data.seatId && s.qrToken === data.qrToken);
+      if (!seat) {
+        toast({ title: 'Invalid QR', description: 'QR code does not match any valid seat.', variant: 'destructive' });
+        return;
+      }
+      if (seat.seatId !== pendingBooking.seatId) {
+        toast({ title: 'Wrong seat', description: `This QR is for ${seat.seatId}, but your booking is for ${pendingBooking.seatId}.`, variant: 'destructive' });
+        return;
+      }
+      const success = checkIn(pendingBooking.seatId, user.userId);
+      if (success) {
+        setScanned(true);
+        stopScanner();
+      }
+    } catch {
+      toast({ title: 'Invalid QR', description: 'Could not read QR code data.', variant: 'destructive' });
+    }
+  };
+
+  const startScanner = async () => {
+    setCameraError(null);
+    try {
+      const scanner = new Html5Qrcode('qr-reader');
+      scannerRef.current = scanner;
+      await scanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 220, height: 220 } },
+        (decodedText) => {
+          processQrData(decodedText);
+        },
+        () => {} // ignore errors during scanning
+      );
+      setScanning(true);
+    } catch (err: any) {
+      setCameraError(err?.message || 'Camera access denied or not available.');
+      setScanning(false);
+    }
+  };
+
+  const stopScanner = async () => {
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+      } catch {}
+      scannerRef.current = null;
+    }
+    setScanning(false);
+  };
+
+  const handleSimulateScan = () => {
+    if (!pendingBooking || !user) return;
+    const seat = seats.find(s => s.seatId === pendingBooking.seatId);
+    if (!seat) return;
+    const success = checkIn(pendingBooking.seatId, user.userId);
+    if (success) setScanned(true);
+  };
+
+  // Cleanup on close
+  useEffect(() => {
+    if (!open) {
+      stopScanner();
+      setScanned(false);
+      setCameraError(null);
+    }
+  }, [open]);
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { stopScanner(); onClose(); } }}>
       <DialogContent className="max-w-sm text-center">
         <DialogHeader>
           <DialogTitle className="font-display flex items-center justify-center gap-2">
@@ -52,7 +115,7 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
             QR Check-In
           </DialogTitle>
           <DialogDescription>
-            {scanned ? 'Successfully checked in!' : 'Scan the QR code at your seat'}
+            {scanned ? 'Successfully checked in!' : 'Scan the QR code at your seat using your camera'}
           </DialogDescription>
         </DialogHeader>
 
@@ -69,25 +132,64 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-4 py-4">
-            <div className="p-4 bg-card rounded-xl border border-border">
-              <QRCodeSVG
-                value={JSON.stringify({
-                  seatId: seatForBooking.seatId,
-                  qrToken: seatForBooking.qrToken,
-                })}
-                size={180}
-                level="H"
-                bgColor="transparent"
-                fgColor="hsl(160, 84%, 39%)"
-              />
+            {/* Camera Scanner Area */}
+            <div className="w-full rounded-xl border border-border overflow-hidden bg-muted/30 relative" style={{ minHeight: 260 }}>
+              <div id="qr-reader" className="w-full" />
+              {!scanning && !cameraError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                  <Camera className="w-10 h-10 text-muted-foreground/50" />
+                  <p className="text-xs text-muted-foreground">Camera preview will appear here</p>
+                </div>
+              )}
+              {cameraError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-4">
+                  <CameraOff className="w-8 h-8 text-destructive/70" />
+                  <p className="text-xs text-destructive">{cameraError}</p>
+                </div>
+              )}
             </div>
+
             <p className="text-xs text-muted-foreground">
               Seat: <strong>{pendingBooking.seatId}</strong>
             </p>
-            <Button onClick={handleSimulateScan} className="w-full gap-2">
-              <ScanLine className="w-4 h-4" />
-              Simulate QR Scan
-            </Button>
+
+            {/* Action buttons */}
+            <div className="w-full flex flex-col gap-2">
+              {!scanning ? (
+                <Button onClick={startScanner} className="w-full gap-2">
+                  <Camera className="w-4 h-4" />
+                  Open Camera & Scan
+                </Button>
+              ) : (
+                <Button onClick={stopScanner} variant="outline" className="w-full gap-2">
+                  <CameraOff className="w-4 h-4" />
+                  Stop Camera
+                </Button>
+              )}
+              <Button onClick={handleSimulateScan} variant="secondary" className="w-full gap-2">
+                <Zap className="w-4 h-4" />
+                Quick Simulate Scan
+              </Button>
+            </div>
+
+            {/* Show QR for reference */}
+            <details className="w-full text-left">
+              <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
+                Show seat QR code (for testing)
+              </summary>
+              <div className="flex justify-center mt-3 p-3 bg-card rounded-lg border border-border">
+                <QRCodeSVG
+                  value={JSON.stringify({
+                    seatId: seatForBooking.seatId,
+                    qrToken: seatForBooking.qrToken,
+                  })}
+                  size={150}
+                  level="H"
+                  bgColor="transparent"
+                  fgColor="hsl(160, 84%, 39%)"
+                />
+              </div>
+            </details>
           </div>
         )}
       </DialogContent>
