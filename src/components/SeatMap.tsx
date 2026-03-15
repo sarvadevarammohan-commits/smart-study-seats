@@ -53,7 +53,8 @@ const SeatMap: React.FC<SeatMapProps> = ({ seats, onSeatClick, bookings = [] }) 
                 ))}
               </motion.div>
 
-              {bi < blockNumbers.length - 1 && (
+              {/* Table dividers between blocks 1&2 and 3&4 */}
+              {(bn === 1 || bn === 3) && (
                 <div className="flex flex-col items-center justify-center">
                   <div className="table-divider w-8 sm:w-10 h-full min-h-[180px] rounded-md">
                     <span className="[writing-mode:vertical-rl] text-[9px] rotate-180">TABLE</span>
