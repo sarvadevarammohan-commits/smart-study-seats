@@ -228,11 +228,33 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const toggleDarkMode = useCallback(() => setIsDarkMode(p => !p), []);
 
+  const fileComplaint = useCallback((userId: string, userName: string, seatId: string, bookingId: string, message: string) => {
+    const newComplaint: Complaint = {
+      complaintId: `CMP-${Date.now()}`,
+      userId,
+      userName,
+      seatId,
+      bookingId,
+      message,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    setComplaints(prev => [...prev, newComplaint]);
+    toast({ title: '📩 Complaint filed', description: 'Your complaint has been sent to the admin.' });
+  }, [toast]);
+
+  const updateComplaintStatus = useCallback((complaintId: string, status: ComplaintStatus, adminNote?: string) => {
+    setComplaints(prev => prev.map(c =>
+      c.complaintId === complaintId ? { ...c, status, adminNote: adminNote || c.adminNote } : c
+    ));
+    toast({ title: 'Complaint updated', description: `Complaint marked as ${status}.` });
+  }, [toast]);
+
   return (
     <LibraryContext.Provider value={{
       seats, bookings, userBookingsToday: [], bookSeat, checkIn, cancelBooking,
       releaseSeat, addSeat, removeSeat, getStats, hourlyData, analyticsHistory,
-      isDarkMode, toggleDarkMode,
+      isDarkMode, toggleDarkMode, complaints, fileComplaint, updateComplaintStatus,
     }}>
       {children}
     </LibraryContext.Provider>
