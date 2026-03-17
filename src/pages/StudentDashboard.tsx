@@ -9,7 +9,7 @@ import QRCheckIn from '@/components/QRCheckIn';
 import ComplaintDialog from '@/components/ComplaintDialog';
 import Header from '@/components/Header';
 import { motion } from 'framer-motion';
-import { Armchair, Clock, CalendarCheck, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Armchair, Clock, CalendarCheck, RefreshCw, AlertTriangle, MessageSquareWarning, CheckCircle, XCircle, CircleDot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
