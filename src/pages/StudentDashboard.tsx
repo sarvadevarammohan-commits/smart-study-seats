@@ -62,10 +62,17 @@ const StudentDashboard: React.FC = () => {
         <SeatMap seats={seats} onSeatClick={s => s.status === 'available' && setSelectedSeat(s)} bookings={bookings} />
 
         {/* My Bookings */}
-        <MyBookings
-          bookings={myBookings}
-          onCheckIn={() => setShowQR(true)}
-        />
+        <div className="flex items-center gap-2">
+          <MyBookings
+            bookings={myBookings}
+            onCheckIn={() => setShowQR(true)}
+          />
+          {myBookings.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => setShowComplaint(true)} className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10 self-start mt-1">
+              <AlertTriangle className="w-3.5 h-3.5" /> Report Issue
+            </Button>
+          )}
+        </div>
 
         {/* Booking Dialog */}
         {selectedSeat && (
