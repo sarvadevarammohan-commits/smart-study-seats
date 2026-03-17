@@ -62,17 +62,58 @@ const StudentDashboard: React.FC = () => {
         <SeatMap seats={seats} onSeatClick={s => s.status === 'available' && setSelectedSeat(s)} bookings={bookings} />
 
         {/* My Bookings */}
-        <div className="flex items-center gap-2">
-          <MyBookings
-            bookings={myBookings}
-            onCheckIn={() => setShowQR(true)}
-          />
-          {myBookings.length > 0 && (
-            <Button variant="outline" size="sm" onClick={() => setShowComplaint(true)} className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10 self-start mt-1">
-              <AlertTriangle className="w-3.5 h-3.5" /> Report Issue
-            </Button>
-          )}
+        <MyBookings
+          bookings={myBookings}
+          onCheckIn={() => setShowQR(true)}
+        />
+
+        {/* Report Issue Button - always visible */}
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={() => setShowComplaint(true)} className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10">
+            <AlertTriangle className="w-3.5 h-3.5" /> Report Issue
+          </Button>
         </div>
+
+        {/* My Complaints */}
+        {myComplaints.length > 0 && (
+          <div className="glass-card p-4 sm:p-6">
+            <h2 className="font-display font-bold text-lg text-foreground mb-3 flex items-center gap-2">
+              <MessageSquareWarning className="w-5 h-5 text-destructive" /> My Complaints
+            </h2>
+            <div className="space-y-2">
+              {[...myComplaints].reverse().map(c => (
+                <div key={c.complaintId} className={`p-3 rounded-lg border ${
+                  c.status === 'pending' ? 'bg-destructive/5 border-destructive/20' :
+                  c.status === 'resolved' ? 'bg-primary/5 border-primary/20' :
+                  'bg-muted/50 border-border'
+                }`}>
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      {c.seatId === 'N/A' ? '🐛 App Issue' : `🪑 Seat ${c.seatId}`}
+                    </p>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize flex items-center gap-1 ${
+                      c.status === 'pending' ? 'bg-destructive/20 text-destructive' :
+                      c.status === 'resolved' ? 'bg-primary/20 text-primary' :
+                      'bg-muted text-muted-foreground'
+                    }`}>
+                      {c.status === 'pending' && <CircleDot className="w-3 h-3" />}
+                      {c.status === 'resolved' && <CheckCircle className="w-3 h-3" />}
+                      {c.status === 'dismissed' && <XCircle className="w-3 h-3" />}
+                      {c.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{c.message}</p>
+                  {c.adminNote && (
+                    <p className="text-xs text-primary mt-1 font-medium">📋 Admin: {c.adminNote}</p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {new Date(c.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Booking Dialog */}
         {selectedSeat && (
