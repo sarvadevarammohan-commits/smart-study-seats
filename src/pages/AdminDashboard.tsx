@@ -46,10 +46,18 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <Tabs defaultValue="map" className="w-full">
-          <TabsList className="w-full grid grid-cols-5 mb-4">
+          <TabsList className="w-full grid grid-cols-6 mb-4">
             <TabsTrigger value="map">Floor Map</TabsTrigger>
             <TabsTrigger value="manage">Manage</TabsTrigger>
-            <TabsTrigger value="qrcodes" className="gap-1"><QrCode className="w-3.5 h-3.5" /> QR Codes</TabsTrigger>
+            <TabsTrigger value="qrcodes" className="gap-1"><QrCode className="w-3.5 h-3.5" /> QR</TabsTrigger>
+            <TabsTrigger value="complaints" className="gap-1 relative">
+              <MessageSquareWarning className="w-3.5 h-3.5" /> Complaints
+              {complaints.filter(c => c.status === 'pending').length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center">
+                  {complaints.filter(c => c.status === 'pending').length}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
