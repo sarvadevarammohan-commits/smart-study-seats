@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Seat, Booking, SeatStatus, HourlyData, AnalyticsData } from '@/types/library';
+import { Seat, Booking, SeatStatus, HourlyData, AnalyticsData, Complaint, ComplaintStatus } from '@/types/library';
 import { useToast } from '@/hooks/use-toast';
 
 interface LibraryContextType {
