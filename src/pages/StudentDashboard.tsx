@@ -20,7 +20,6 @@ const StudentDashboard: React.FC = () => {
   const [showQR, setShowQR] = useState(false);
   const [showComplaint, setShowComplaint] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
   const stats = getStats();
