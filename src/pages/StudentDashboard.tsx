@@ -6,9 +6,10 @@ import SeatMap from '@/components/SeatMap';
 import BookingDialog from '@/components/BookingDialog';
 import MyBookings from '@/components/MyBookings';
 import QRCheckIn from '@/components/QRCheckIn';
+import ComplaintDialog from '@/components/ComplaintDialog';
 import Header from '@/components/Header';
 import { motion } from 'framer-motion';
-import { Armchair, Clock, CalendarCheck, RefreshCw } from 'lucide-react';
+import { Armchair, Clock, CalendarCheck, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
