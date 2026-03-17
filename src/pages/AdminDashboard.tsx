@@ -6,7 +6,7 @@ import SeatMap from '@/components/SeatMap';
 import AdminSeatQRCodes from '@/components/AdminSeatQRCodes';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
-import { Armchair, Users, Clock, AlertTriangle, Plus, Trash2, TrendingUp, Activity, QrCode } from 'lucide-react';
+import { Armchair, Users, Clock, AlertTriangle, Plus, Trash2, TrendingUp, Activity, QrCode, MessageSquareWarning, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
