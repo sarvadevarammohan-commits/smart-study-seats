@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { seats, bookings, getStats } = useLibrary();
+  const { seats, bookings, getStats, complaints } = useLibrary();
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [showQR, setShowQR] = useState(false);
   const [showComplaint, setShowComplaint] = useState(false);
