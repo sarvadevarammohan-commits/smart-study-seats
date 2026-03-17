@@ -24,6 +24,7 @@ const StudentDashboard: React.FC = () => {
 
   const stats = getStats();
   const myBookings = bookings.filter(b => b.userId === user?.userId);
+  const myComplaints = complaints.filter(c => c.userId === user?.userId);
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
