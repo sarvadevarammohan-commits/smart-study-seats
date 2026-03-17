@@ -33,40 +33,84 @@ const SeatMap: React.FC<SeatMapProps> = ({ seats, onSeatClick, bookings = [] }) 
       </div>
 
       <div className="bg-secondary/50 rounded-xl p-4 sm:p-6 border border-border">
-        <p className="text-[10px] text-muted-foreground text-center mb-3 font-medium uppercase tracking-wider">
+        <p className="text-[10px] text-muted-foreground text-center mb-4 font-medium uppercase tracking-wider">
           — Entrance —
         </p>
-        <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
           {blockNumbers.map((bn, bi) => (
-            <React.Fragment key={bn}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: bi * 0.1 }}
-                className="flex flex-col gap-2 items-center"
-              >
-                <span className="text-[10px] text-muted-foreground font-medium mb-1">Block {bn}</span>
-                {blocks[bn].map((seat, si) => (
-                  <div key={seat.seatId} className="w-16 sm:w-20">
-                    <SeatCard seat={seat} onClick={onSeatClick} index={bi * 3 + si} booking={getBookingForSeat(seat.seatId)} />
-                  </div>
-                ))}
-              </motion.div>
-
-              {/* Table dividers between blocks 1&2 and 3&4 */}
-              {(bn === 1 || bn === 3) && (
-                <div className="flex flex-col items-center justify-center">
-                  <div className="table-divider w-8 sm:w-10 h-full min-h-[180px] rounded-md">
-                    <span className="[writing-mode:vertical-rl] text-[9px] rotate-180">TABLE</span>
-                  </div>
-                </div>
-              )}
-            </React.Fragment>
+            <motion.div
+              key={bn}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: bi * 0.1 }}
+              className="flex flex-col items-center"
+            >
+              <span className="text-[10px] text-muted-foreground font-medium mb-2">Block {bn}</span>
+              <BlockLayout
+                seats={blocks[bn]}
+                onSeatClick={onSeatClick}
+                blockIndex={bi}
+                getBookingForSeat={getBookingForSeat}
+              />
+            </motion.div>
           ))}
         </div>
-        <p className="text-[10px] text-muted-foreground text-center mt-3 font-medium uppercase tracking-wider">
+        <p className="text-[10px] text-muted-foreground text-center mt-4 font-medium uppercase tracking-wider">
           — Back Wall —
         </p>
+      </div>
+    </div>
+  );
+};
+
+interface BlockLayoutProps {
+  seats: Seat[];
+  onSeatClick: (seat: Seat) => void;
+  blockIndex: number;
+  getBookingForSeat: (seatId: string) => Booking | undefined;
+}
+
+const BlockLayout: React.FC<BlockLayoutProps> = ({ seats, onSeatClick, blockIndex, getBookingForSeat }) => {
+  // Seats arranged: first 3 = top, next 3 = left, last 3 = right
+  const topSeats = seats.slice(0, 3);
+  const leftSeats = seats.slice(3, 6);
+  const rightSeats = seats.slice(6, 9);
+
+  return (
+    <div className="relative flex flex-col items-center gap-2">
+      {/* Top row - 3 seats */}
+      <div className="flex gap-2 justify-center">
+        {topSeats.map((seat, si) => (
+          <div key={seat.seatId} className="w-14 sm:w-16">
+            <SeatCard seat={seat} onClick={onSeatClick} index={blockIndex * 9 + si} booking={getBookingForSeat(seat.seatId)} />
+          </div>
+        ))}
+      </div>
+
+      {/* Middle row - left seats, round table, right seats */}
+      <div className="flex items-center gap-2">
+        {/* Left column */}
+        <div className="flex flex-col gap-2">
+          {leftSeats.map((seat, si) => (
+            <div key={seat.seatId} className="w-14 sm:w-16">
+              <SeatCard seat={seat} onClick={onSeatClick} index={blockIndex * 9 + 3 + si} booking={getBookingForSeat(seat.seatId)} />
+            </div>
+          ))}
+        </div>
+
+        {/* Round table */}
+        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-muted/60 border-2 border-primary/30 flex items-center justify-center shadow-inner">
+          <span className="text-[10px] text-muted-foreground font-medium">TABLE</span>
+        </div>
+
+        {/* Right column */}
+        <div className="flex flex-col gap-2">
+          {rightSeats.map((seat, si) => (
+            <div key={seat.seatId} className="w-14 sm:w-16">
+              <SeatCard seat={seat} onClick={onSeatClick} index={blockIndex * 9 + 6 + si} booking={getBookingForSeat(seat.seatId)} />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -27,27 +27,31 @@ function generateQRToken(seatId: string): string {
 
 function generateInitialSeats(): Seat[] {
   const seats: Seat[] = [];
-  for (let i = 1; i <= 15; i++) {
-    const block = Math.ceil(i / 3);
-    seats.push({
-      seatId: `S${i}`,
-      status: 'available',
-      currentUser: null,
-      expiryTime: null,
-      blockNumber: block,
-      qrToken: generateQRToken(`S${i}`),
-    });
+  // 4 blocks, 9 seats each (3 top, 3 left, 3 right around a round table)
+  for (let block = 1; block <= 4; block++) {
+    for (let s = 1; s <= 9; s++) {
+      const seatNum = (block - 1) * 9 + s;
+      seats.push({
+        seatId: `S${seatNum}`,
+        status: 'available',
+        currentUser: null,
+        expiryTime: null,
+        blockNumber: block,
+        qrToken: generateQRToken(`S${seatNum}`),
+      });
+    }
   }
+  // Some pre-occupied/reserved seats for demo
   seats[2].status = 'occupied';
   seats[2].currentUser = 'stu-002';
-  seats[6].status = 'reserved';
-  seats[6].currentUser = 'stu-003';
-  seats[6].expiryTime = new Date(Date.now() + 50 * 60000).toISOString();
-  seats[10].status = 'occupied';
-  seats[10].currentUser = 'stu-004';
-  seats[13].status = 'reserved';
-  seats[13].currentUser = 'stu-005';
-  seats[13].expiryTime = new Date(Date.now() + 30 * 60000).toISOString();
+  seats[10].status = 'reserved';
+  seats[10].currentUser = 'stu-003';
+  seats[10].expiryTime = new Date(Date.now() + 50 * 60000).toISOString();
+  seats[20].status = 'occupied';
+  seats[20].currentUser = 'stu-004';
+  seats[30].status = 'reserved';
+  seats[30].currentUser = 'stu-005';
+  seats[30].expiryTime = new Date(Date.now() + 30 * 60000).toISOString();
   return seats;
 }
 
