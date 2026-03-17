@@ -18,6 +18,8 @@ const StudentDashboard: React.FC = () => {
   const { seats, bookings, getStats } = useLibrary();
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [showQR, setShowQR] = useState(false);
+  const [showComplaint, setShowComplaint] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
