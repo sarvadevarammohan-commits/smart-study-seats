@@ -17,6 +17,9 @@ interface LibraryContextType {
   analyticsHistory: AnalyticsData[];
   isDarkMode: boolean;
   toggleDarkMode: () => void;
+  complaints: Complaint[];
+  fileComplaint: (userId: string, userName: string, seatId: string, bookingId: string, message: string) => void;
+  updateComplaintStatus: (complaintId: string, status: ComplaintStatus, adminNote?: string) => void;
 }
 
 const LibraryContext = createContext<LibraryContextType | null>(null);
