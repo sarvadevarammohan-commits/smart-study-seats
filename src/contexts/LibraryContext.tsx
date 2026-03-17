@@ -84,6 +84,7 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [hourlyData] = useState<HourlyData[]>(generateHourlyData);
   const [analyticsHistory] = useState<AnalyticsData[]>(generateAnalyticsHistory);
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
