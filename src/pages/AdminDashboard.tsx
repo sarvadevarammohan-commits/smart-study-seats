@@ -6,14 +6,14 @@ import SeatMap from '@/components/SeatMap';
 import AdminSeatQRCodes from '@/components/AdminSeatQRCodes';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
-import { Armchair, Users, Clock, AlertTriangle, Plus, Trash2, TrendingUp, Activity, QrCode } from 'lucide-react';
+import { Armchair, Users, Clock, AlertTriangle, Plus, Trash2, TrendingUp, Activity, QrCode, MessageSquareWarning, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { seats, bookings, getStats, hourlyData, analyticsHistory, addSeat, removeSeat, releaseSeat } = useLibrary();
+  const { seats, bookings, getStats, hourlyData, analyticsHistory, addSeat, removeSeat, releaseSeat, complaints, updateComplaintStatus } = useLibrary();
   const [newBlock, setNewBlock] = useState('1');
   const stats = getStats();
 
@@ -46,10 +46,18 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         <Tabs defaultValue="map" className="w-full">
-          <TabsList className="w-full grid grid-cols-5 mb-4">
+          <TabsList className="w-full grid grid-cols-6 mb-4">
             <TabsTrigger value="map">Floor Map</TabsTrigger>
             <TabsTrigger value="manage">Manage</TabsTrigger>
-            <TabsTrigger value="qrcodes" className="gap-1"><QrCode className="w-3.5 h-3.5" /> QR Codes</TabsTrigger>
+            <TabsTrigger value="qrcodes" className="gap-1"><QrCode className="w-3.5 h-3.5" /> QR</TabsTrigger>
+            <TabsTrigger value="complaints" className="gap-1 relative">
+              <MessageSquareWarning className="w-3.5 h-3.5" /> Complaints
+              {complaints.filter(c => c.status === 'pending').length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-destructive text-destructive-foreground text-[10px] flex items-center justify-center">
+                  {complaints.filter(c => c.status === 'pending').length}
+                </span>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
@@ -102,6 +110,57 @@ const AdminDashboard: React.FC = () => {
 
           <TabsContent value="qrcodes">
             <AdminSeatQRCodes seats={seats} />
+          </TabsContent>
+
+          <TabsContent value="complaints">
+            <div className="glass-card p-5 space-y-4">
+              <h3 className="font-display font-bold text-foreground flex items-center gap-2">
+                <MessageSquareWarning className="w-5 h-5 text-destructive" /> Student Complaints
+              </h3>
+              {complaints.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No complaints received yet.</p>
+              ) : (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                  {[...complaints].reverse().map(c => (
+                    <div key={c.complaintId} className={`p-4 rounded-lg border space-y-2 ${
+                      c.status === 'pending' ? 'bg-destructive/5 border-destructive/20' :
+                      c.status === 'resolved' ? 'bg-primary/5 border-primary/20' :
+                      'bg-muted/50 border-border'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{c.userName}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Seat {c.seatId} · {new Date(c.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full capitalize ${
+                          c.status === 'pending' ? 'bg-destructive/20 text-destructive' :
+                          c.status === 'resolved' ? 'bg-primary/20 text-primary' :
+                          'bg-muted text-muted-foreground'
+                        }`}>
+                          {c.status}
+                        </span>
+                      </div>
+                      <p className="text-sm text-foreground">{c.message}</p>
+                      {c.adminNote && (
+                        <p className="text-xs text-muted-foreground italic">Admin: {c.adminNote}</p>
+                      )}
+                      {c.status === 'pending' && (
+                        <div className="flex gap-2 pt-1">
+                          <Button size="sm" variant="default" onClick={() => updateComplaintStatus(c.complaintId, 'resolved', 'Issue addressed')} className="gap-1 h-7 text-xs">
+                            <CheckCircle className="w-3.5 h-3.5" /> Resolve
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => updateComplaintStatus(c.complaintId, 'dismissed', 'No action needed')} className="gap-1 h-7 text-xs">
+                            <XCircle className="w-3.5 h-3.5" /> Dismiss
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="analytics">

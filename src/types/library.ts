@@ -43,3 +43,17 @@ export interface HourlyData {
   hour: string;
   occupancy: number;
 }
+
+export type ComplaintStatus = 'pending' | 'resolved' | 'dismissed';
+
+export interface Complaint {
+  complaintId: string;
+  userId: string;
+  userName: string;
+  seatId: string;
+  bookingId: string;
+  message: string;
+  status: ComplaintStatus;
+  createdAt: string;
+  adminNote?: string;
+}

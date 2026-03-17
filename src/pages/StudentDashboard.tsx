@@ -6,9 +6,10 @@ import SeatMap from '@/components/SeatMap';
 import BookingDialog from '@/components/BookingDialog';
 import MyBookings from '@/components/MyBookings';
 import QRCheckIn from '@/components/QRCheckIn';
+import ComplaintDialog from '@/components/ComplaintDialog';
 import Header from '@/components/Header';
 import { motion } from 'framer-motion';
-import { Armchair, Clock, CalendarCheck, RefreshCw } from 'lucide-react';
+import { Armchair, Clock, CalendarCheck, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,6 +18,7 @@ const StudentDashboard: React.FC = () => {
   const { seats, bookings, getStats } = useLibrary();
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   const [showQR, setShowQR] = useState(false);
+  const [showComplaint, setShowComplaint] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
 
@@ -59,10 +61,17 @@ const StudentDashboard: React.FC = () => {
         <SeatMap seats={seats} onSeatClick={s => s.status === 'available' && setSelectedSeat(s)} bookings={bookings} />
 
         {/* My Bookings */}
-        <MyBookings
-          bookings={myBookings}
-          onCheckIn={() => setShowQR(true)}
-        />
+        <div className="flex items-center gap-2">
+          <MyBookings
+            bookings={myBookings}
+            onCheckIn={() => setShowQR(true)}
+          />
+          {myBookings.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => setShowComplaint(true)} className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10 self-start mt-1">
+              <AlertTriangle className="w-3.5 h-3.5" /> Report Issue
+            </Button>
+          )}
+        </div>
 
         {/* Booking Dialog */}
         {selectedSeat && (
@@ -81,6 +90,13 @@ const StudentDashboard: React.FC = () => {
             bookings={myBookings}
           />
         )}
+
+        {/* Complaint Dialog */}
+        <ComplaintDialog
+          open={showComplaint}
+          onClose={() => setShowComplaint(false)}
+          bookings={myBookings}
+        />
       </main>
     </div>
   );
