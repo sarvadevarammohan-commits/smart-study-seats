@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { seats, bookings, getStats, hourlyData, analyticsHistory, addSeat, removeSeat, releaseSeat } = useLibrary();
+  const { seats, bookings, getStats, hourlyData, analyticsHistory, addSeat, removeSeat, releaseSeat, complaints, updateComplaintStatus } = useLibrary();
   const [newBlock, setNewBlock] = useState('1');
   const stats = getStats();
 
