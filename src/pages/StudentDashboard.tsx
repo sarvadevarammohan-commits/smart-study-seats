@@ -91,6 +91,13 @@ const StudentDashboard: React.FC = () => {
             bookings={myBookings}
           />
         )}
+
+        {/* Complaint Dialog */}
+        <ComplaintDialog
+          open={showComplaint}
+          onClose={() => setShowComplaint(false)}
+          bookings={myBookings}
+        />
       </main>
     </div>
   );
