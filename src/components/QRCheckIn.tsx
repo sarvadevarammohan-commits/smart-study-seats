@@ -35,7 +35,7 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
     ? seats.find(s => s.seatId === pendingBooking.seatId)
     : null;
 
-  const processQrData = (decodedText: string) => {
+  const processQrData = async (decodedText: string) => {
     if (!pendingBooking || !user) return;
     try {
       const data = JSON.parse(decodedText);
@@ -48,7 +48,7 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
         toast({ title: 'Wrong seat', description: `This QR is for ${seat.seatId}, but your booking is for ${pendingBooking.seatId}.`, variant: 'destructive' });
         return;
       }
-      const success = checkIn(pendingBooking.seatId, user.userId);
+      const success = await checkIn(pendingBooking.seatId, user.userId);
       if (success) {
         setScanned(true);
         stopScanner();
@@ -89,11 +89,11 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
     setScanning(false);
   };
 
-  const handleSimulateScan = () => {
+  const handleSimulateScan = async () => {
     if (!pendingBooking || !user) return;
     const seat = seats.find(s => s.seatId === pendingBooking.seatId);
     if (!seat) return;
-    const success = checkIn(pendingBooking.seatId, user.userId);
+    const success = await checkIn(pendingBooking.seatId, user.userId);
     if (success) setScanned(true);
   };
 
