@@ -148,10 +148,10 @@ const AdminDashboard: React.FC = () => {
                       )}
                       {c.status === 'pending' && (
                         <div className="flex gap-2 pt-1">
-                          <Button size="sm" variant="default" onClick={() => updateComplaintStatus(c.complaintId, 'resolved', 'Issue addressed')} className="gap-1 h-7 text-xs">
+                          <Button size="sm" variant="default" onClick={() => updateComplaintStatus(c.id, 'resolved', 'Issue addressed')} className="gap-1 h-7 text-xs">
                             <CheckCircle className="w-3.5 h-3.5" /> Resolve
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => updateComplaintStatus(c.complaintId, 'dismissed', 'No action needed')} className="gap-1 h-7 text-xs">
+                          <Button size="sm" variant="outline" onClick={() => updateComplaintStatus(c.id, 'dismissed', 'No action needed')} className="gap-1 h-7 text-xs">
                             <XCircle className="w-3.5 h-3.5" /> Dismiss
                           </Button>
                         </div>

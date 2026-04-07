@@ -28,10 +28,9 @@ const StudentDashboard: React.FC = () => {
 
   const handleRefresh = useCallback(() => {
     setRefreshing(true);
-    // Simulate data refresh
     setTimeout(() => {
       setRefreshing(false);
-      toast({ title: 'Refreshed', description: 'Seat data updated successfully.' });
+      toast({ title: 'Refreshed', description: 'Data syncs automatically in real-time.' });
     }, 600);
   }, [toast]);
 

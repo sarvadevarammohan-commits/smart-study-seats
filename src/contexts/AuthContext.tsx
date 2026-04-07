@@ -1,76 +1,117 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { User, UserRole } from '@/types/library';
+import { supabase } from '@/integrations/supabase/client';
+import type { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  loading: boolean;
   login: (email: string, password: string, role: UserRole) => Promise<boolean>;
+  signup: (email: string, password: string, name: string, role: UserRole, extra?: { rollNumber?: string; branch?: string; year?: string; subject?: string }) => Promise<boolean>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const MOCK_USERS: Record<string, User> = {
-  'student@college.edu': {
-    userId: 'stu-001',
-    name: 'Arjun Kumar',
-    email: 'student@college.edu',
-    rollNumber: '22CS101',
-    role: 'student',
+async function fetchUserProfile(userId: string): Promise<User | null> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  const { data: roles } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId);
+
+  if (!profile) return null;
+
+  const role: UserRole = roles?.some(r => r.role === 'admin') ? 'admin' : 'student';
+
+  return {
+    userId: profile.user_id,
+    name: profile.name || '',
+    email: profile.email || '',
+    rollNumber: profile.roll_number || '',
+    role,
     dailyBookingCount: 0,
-    branch: 'CSE (AI & Data Science)',
-    year: '3rd Year',
-  },
-  'admin@library.edu': {
-    userId: 'adm-001',
-    name: 'Dr. Priya Sharma',
-    email: 'admin@library.edu',
-    rollNumber: 'ADMIN',
-    role: 'admin',
-    dailyBookingCount: 0,
-    subject: 'Artificial Intelligence',
-  },
-};
+    branch: profile.branch || '',
+    year: profile.year || '',
+    subject: profile.subject || '',
+  };
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    try {
-      const saved = localStorage.getItem('library_user');
-      return saved ? JSON.parse(saved) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = useCallback(async (email: string, _password: string, role: UserRole): Promise<boolean> => {
-    // Mock authentication
-    const mockUser = MOCK_USERS[email];
-    let loggedInUser: User;
-    if (mockUser && mockUser.role === role) {
-      loggedInUser = mockUser;
-    } else {
-      loggedInUser = {
-        userId: `user-${Date.now()}`,
-        name: email.split('@')[0],
-        email,
-        rollNumber: role === 'student' ? 'DEMO' : 'ADMIN',
-        role,
-        dailyBookingCount: 0,
-        ...(role === 'student' ? { branch: 'General', year: '1st Year' } : { subject: 'General' }),
-      };
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session: Session | null) => {
+      if (session?.user) {
+        const profile = await fetchUserProfile(session.user.id);
+        setUser(profile);
+      } else {
+        setUser(null);
+      }
+      setLoading(false);
+    });
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const profile = await fetchUserProfile(session.user.id);
+        setUser(profile);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = useCallback(async (email: string, password: string, _role: UserRole): Promise<boolean> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return !error;
+  }, []);
+
+  const signup = useCallback(async (
+    email: string,
+    password: string,
+    name: string,
+    role: UserRole,
+    extra?: { rollNumber?: string; branch?: string; year?: string; subject?: string }
+  ): Promise<boolean> => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    });
+    if (error || !data.user) return false;
+
+    // Update profile with extra info
+    await supabase.from('profiles').update({
+      name,
+      roll_number: extra?.rollNumber || '',
+      branch: extra?.branch || '',
+      year: extra?.year || '',
+      subject: extra?.subject || '',
+    }).eq('user_id', data.user.id);
+
+    // If admin role requested, add it (in production you'd verify this server-side)
+    if (role === 'admin') {
+      await supabase.from('user_roles').insert({ user_id: data.user.id, role: 'admin' });
     }
-    setUser(loggedInUser);
-    localStorage.setItem('library_user', JSON.stringify(loggedInUser));
+
     return true;
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('library_user');
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, loading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

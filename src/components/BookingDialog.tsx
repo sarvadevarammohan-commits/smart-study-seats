@@ -76,14 +76,14 @@ const BookingDialog: React.FC<BookingDialogProps> = ({ seat, open, onClose }) =>
     b => b.userId === user?.userId && new Date(b.startTime).toDateString() === new Date().toDateString()
   );
 
-  const handleBook = () => {
+  const handleBook = async () => {
     if (user && isValid) {
       const today = new Date();
       const [sh, sm] = startTime.split(':').map(Number);
       const [eh, em] = endTime.split(':').map(Number);
       const start = new Date(today.getFullYear(), today.getMonth(), today.getDate(), sh, sm);
       const end = new Date(today.getFullYear(), today.getMonth(), today.getDate(), eh, em);
-      bookSeat(seat.seatId, user.userId, user.name, undefined, start, end);
+      await bookSeat(seat.seatId, user.userId, user.name, undefined, start, end);
       onClose();
     }
   };
