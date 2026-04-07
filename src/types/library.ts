@@ -14,15 +14,17 @@ export interface User {
 }
 
 export interface Seat {
+  id: string;
   seatId: string;
   status: SeatStatus;
-  currentUser: string | null;
+  currentUserId: string | null;
   expiryTime: string | null;
   blockNumber: number;
   qrToken: string;
 }
 
 export interface Booking {
+  id: string;
   bookingId: string;
   userId: string;
   seatId: string;
@@ -47,6 +49,7 @@ export interface HourlyData {
 export type ComplaintStatus = 'pending' | 'resolved' | 'dismissed';
 
 export interface Complaint {
+  id: string;
   complaintId: string;
   userId: string;
   userName: string;

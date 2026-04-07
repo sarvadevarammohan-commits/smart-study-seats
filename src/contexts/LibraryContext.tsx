@@ -1,13 +1,14 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Seat, Booking, SeatStatus, HourlyData, AnalyticsData, Complaint, ComplaintStatus } from '@/types/library';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface LibraryContextType {
   seats: Seat[];
   bookings: Booking[];
   userBookingsToday: Booking[];
-  bookSeat: (seatId: string, userId: string, userName: string, durationHours?: number, startDate?: Date, endDate?: Date) => boolean;
-  checkIn: (seatId: string, userId: string) => boolean;
+  bookSeat: (seatId: string, userId: string, userName: string, durationHours?: number, startDate?: Date, endDate?: Date) => Promise<boolean>;
+  checkIn: (seatId: string, userId: string) => Promise<boolean>;
   cancelBooking: (bookingId: string) => void;
   releaseSeat: (seatId: string) => void;
   addSeat: (blockNumber: number) => void;
@@ -20,6 +21,7 @@ interface LibraryContextType {
   complaints: Complaint[];
   fileComplaint: (userId: string, userName: string, seatId: string, bookingId: string, message: string) => void;
   updateComplaintStatus: (complaintId: string, status: ComplaintStatus, adminNote?: string) => void;
+  loading: boolean;
 }
 
 const LibraryContext = createContext<LibraryContextType | null>(null);
@@ -28,34 +30,44 @@ function generateQRToken(seatId: string): string {
   return `QR-${seatId}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function generateInitialSeats(): Seat[] {
-  const seats: Seat[] = [];
-  // 4 blocks, 9 seats each (3 top, 3 left, 3 right around a round table)
-  for (let block = 1; block <= 4; block++) {
-    for (let s = 1; s <= 9; s++) {
-      const seatNum = (block - 1) * 9 + s;
-      seats.push({
-        seatId: `S${seatNum}`,
-        status: 'available',
-        currentUser: null,
-        expiryTime: null,
-        blockNumber: block,
-        qrToken: generateQRToken(`S${seatNum}`),
-      });
-    }
-  }
-  // Some pre-occupied/reserved seats for demo
-  seats[2].status = 'occupied';
-  seats[2].currentUser = 'stu-002';
-  seats[10].status = 'reserved';
-  seats[10].currentUser = 'stu-003';
-  seats[10].expiryTime = new Date(Date.now() + 50 * 60000).toISOString();
-  seats[20].status = 'occupied';
-  seats[20].currentUser = 'stu-004';
-  seats[30].status = 'reserved';
-  seats[30].currentUser = 'stu-005';
-  seats[30].expiryTime = new Date(Date.now() + 30 * 60000).toISOString();
-  return seats;
+function mapSeatRow(row: any): Seat {
+  return {
+    id: row.id,
+    seatId: row.seat_id,
+    status: row.status as SeatStatus,
+    currentUserId: row.current_user_id,
+    expiryTime: row.expiry_time,
+    blockNumber: row.block_number,
+    qrToken: row.qr_token,
+  };
+}
+
+function mapBookingRow(row: any): Booking {
+  return {
+    id: row.id,
+    bookingId: row.id,
+    userId: row.user_id,
+    seatId: row.seat_id,
+    startTime: row.start_time,
+    endTime: row.end_time,
+    checkedIn: row.checked_in,
+    userName: row.user_name,
+  };
+}
+
+function mapComplaintRow(row: any): Complaint {
+  return {
+    id: row.id,
+    complaintId: row.id,
+    userId: row.user_id,
+    userName: row.user_name,
+    seatId: row.seat_id,
+    bookingId: row.booking_id || '',
+    message: row.message,
+    status: row.status as ComplaintStatus,
+    createdAt: row.created_at,
+    adminNote: row.admin_note,
+  };
 }
 
 function generateHourlyData(): HourlyData[] {
@@ -79,49 +91,94 @@ function generateAnalyticsHistory(): AnalyticsData[] {
 }
 
 export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [seats, setSeats] = useState<Seat[]>(generateInitialSeats);
+  const [seats, setSeats] = useState<Seat[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [hourlyData] = useState<HourlyData[]>(generateHourlyData);
   const [analyticsHistory] = useState<AnalyticsData[]>(generateAnalyticsHistory);
-  const [complaints, setComplaints] = useState<Complaint[]>([]);
   const { toast } = useToast();
+
+  // Initial data fetch
+  useEffect(() => {
+    const fetchData = async () => {
+      const [seatsRes, bookingsRes, complaintsRes] = await Promise.all([
+        supabase.from('seats').select('*').order('seat_id'),
+        supabase.from('bookings').select('*').order('created_at', { ascending: false }),
+        supabase.from('complaints').select('*').order('created_at', { ascending: false }),
+      ]);
+
+      if (seatsRes.data) setSeats(seatsRes.data.map(mapSeatRow));
+      if (bookingsRes.data) setBookings(bookingsRes.data.map(mapBookingRow));
+      if (complaintsRes.data) setComplaints(complaintsRes.data.map(mapComplaintRow));
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
+
+  // Real-time subscriptions
+  useEffect(() => {
+    const seatsChannel = supabase
+      .channel('realtime-seats')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'seats' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setSeats(prev => [...prev, mapSeatRow(payload.new)]);
+        } else if (payload.eventType === 'UPDATE') {
+          setSeats(prev => prev.map(s => s.id === payload.new.id ? mapSeatRow(payload.new) : s));
+        } else if (payload.eventType === 'DELETE') {
+          setSeats(prev => prev.filter(s => s.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    const bookingsChannel = supabase
+      .channel('realtime-bookings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setBookings(prev => [mapBookingRow(payload.new), ...prev]);
+        } else if (payload.eventType === 'UPDATE') {
+          setBookings(prev => prev.map(b => b.id === payload.new.id ? mapBookingRow(payload.new) : b));
+        } else if (payload.eventType === 'DELETE') {
+          setBookings(prev => prev.filter(b => b.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    const complaintsChannel = supabase
+      .channel('realtime-complaints')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'complaints' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setComplaints(prev => [mapComplaintRow(payload.new), ...prev]);
+        } else if (payload.eventType === 'UPDATE') {
+          setComplaints(prev => prev.map(c => c.id === payload.new.id ? mapComplaintRow(payload.new) : c));
+        } else if (payload.eventType === 'DELETE') {
+          setComplaints(prev => prev.filter(c => c.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(seatsChannel);
+      supabase.removeChannel(bookingsChannel);
+      supabase.removeChannel(complaintsChannel);
+    };
+  }, []);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDarkMode);
   }, [isDarkMode]);
 
-  // Auto-release expired bookings every 30s
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setSeats(prev => prev.map(s => {
-        if (s.status === 'reserved' && s.expiryTime && new Date(s.expiryTime) < new Date()) {
-          toast({ title: `Seat ${s.seatId} auto-released`, description: 'Booking expired without check-in.' });
-          return { ...s, status: 'available' as SeatStatus, currentUser: null, expiryTime: null };
-        }
-        return s;
-      }));
-      setBookings(prev => prev.filter(b => {
-        if (!b.checkedIn && new Date(b.endTime) < new Date()) return false;
-        return true;
-      }));
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [toast]);
-
-  const getUserBookingsToday = useCallback((userId?: string) => {
-    const today = new Date().toDateString();
-    return bookings.filter(b => b.userId === userId && new Date(b.startTime).toDateString() === today);
-  }, [bookings]);
-
-  const bookSeat = useCallback((seatId: string, userId: string, userName: string, durationHours?: number, startDate?: Date, endDate?: Date): boolean => {
+  const bookSeat = useCallback(async (seatId: string, userId: string, userName: string, durationHours?: number, startDate?: Date, endDate?: Date): Promise<boolean> => {
     const seat = seats.find(s => s.seatId === seatId);
     if (!seat || seat.status !== 'available') {
       toast({ title: 'Booking failed', description: 'Seat is not available.', variant: 'destructive' });
       return false;
     }
 
-    const todayBookings = getUserBookingsToday(userId);
+    // Check daily limit
+    const today = new Date().toDateString();
+    const todayBookings = bookings.filter(b => b.userId === userId && new Date(b.startTime).toDateString() === today);
     if (todayBookings.length >= 2) {
       toast({ title: 'Limit reached', description: 'Max 2 bookings per day.', variant: 'destructive' });
       return false;
@@ -130,91 +187,106 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const now = new Date();
     const startTime = startDate || now;
     const endTime = endDate || new Date(now.getTime() + (durationHours || 1) * 60 * 60000);
-    const checkInDeadline = new Date(startTime.getTime() + 10 * 60000); // 10 min from start
+    const checkInDeadline = new Date(startTime.getTime() + 10 * 60000);
 
-    setSeats(prev => prev.map(s =>
-      s.seatId === seatId
-        ? { ...s, status: 'reserved' as SeatStatus, currentUser: userId, expiryTime: checkInDeadline.toISOString() }
-        : s
-    ));
+    // Update seat
+    const { error: seatError } = await supabase.from('seats').update({
+      status: 'reserved' as any,
+      current_user_id: userId,
+      expiry_time: checkInDeadline.toISOString(),
+    }).eq('seat_id', seatId);
 
-    const newBooking: Booking = {
-      bookingId: `BK-${Date.now()}`,
-      userId,
-      seatId,
-      startTime: startTime.toISOString(),
-      endTime: endTime.toISOString(),
-      checkedIn: false,
-      userName,
-    };
-    setBookings(prev => [...prev, newBooking]);
+    if (seatError) {
+      toast({ title: 'Booking failed', description: seatError.message, variant: 'destructive' });
+      return false;
+    }
+
+    // Create booking
+    const { error: bookingError } = await supabase.from('bookings').insert({
+      user_id: userId,
+      seat_id: seatId,
+      start_time: startTime.toISOString(),
+      end_time: endTime.toISOString(),
+      checked_in: false,
+      user_name: userName,
+    });
+
+    if (bookingError) {
+      toast({ title: 'Booking failed', description: bookingError.message, variant: 'destructive' });
+      return false;
+    }
 
     const durMins = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
     const durLabel = durMins >= 60 ? `${(durMins / 60).toFixed(1).replace('.0', '')} hr${durMins > 60 ? 's' : ''}` : `${durMins} min`;
     toast({ title: '✅ Seat booked!', description: `${seatId} reserved for ${durLabel}. Check in within 10 min of start.` });
     return true;
-  }, [seats, getUserBookingsToday, toast]);
+  }, [seats, bookings, toast]);
 
-  const checkIn = useCallback((seatId: string, userId: string): boolean => {
+  const checkIn = useCallback(async (seatId: string, userId: string): Promise<boolean> => {
     const booking = bookings.find(b => b.seatId === seatId && b.userId === userId && !b.checkedIn);
     if (!booking) {
       toast({ title: 'Check-in failed', description: 'No matching booking found.', variant: 'destructive' });
       return false;
     }
 
-    setSeats(prev => prev.map(s =>
-      s.seatId === seatId
-        ? { ...s, status: 'occupied' as SeatStatus, expiryTime: booking.endTime }
-        : s
-    ));
-    setBookings(prev => prev.map(b =>
-      b.bookingId === booking.bookingId ? { ...b, checkedIn: true } : b
-    ));
+    await supabase.from('seats').update({
+      status: 'occupied' as any,
+      expiry_time: booking.endTime,
+    }).eq('seat_id', seatId);
+
+    await supabase.from('bookings').update({
+      checked_in: true,
+    }).eq('id', booking.id);
 
     toast({ title: '🎉 Checked in!', description: `You're now occupying ${seatId}.` });
     return true;
   }, [bookings, toast]);
 
-  const cancelBooking = useCallback((bookingId: string) => {
-    const booking = bookings.find(b => b.bookingId === bookingId);
+  const cancelBooking = useCallback(async (bookingId: string) => {
+    const booking = bookings.find(b => b.id === bookingId || b.bookingId === bookingId);
     if (booking) {
-      setSeats(prev => prev.map(s =>
-        s.seatId === booking.seatId
-          ? { ...s, status: 'available' as SeatStatus, currentUser: null, expiryTime: null }
-          : s
-      ));
-      setBookings(prev => prev.filter(b => b.bookingId !== bookingId));
+      await supabase.from('seats').update({
+        status: 'available' as any,
+        current_user_id: null,
+        expiry_time: null,
+      }).eq('seat_id', booking.seatId);
+
+      await supabase.from('bookings').delete().eq('id', booking.id);
       toast({ title: 'Booking cancelled', description: `${booking.seatId} is now available.` });
     }
   }, [bookings, toast]);
 
-  const releaseSeat = useCallback((seatId: string) => {
-    setSeats(prev => prev.map(s =>
-      s.seatId === seatId
-        ? { ...s, status: 'available' as SeatStatus, currentUser: null, expiryTime: null }
-        : s
-    ));
-    setBookings(prev => prev.filter(b => b.seatId !== seatId));
+  const releaseSeat = useCallback(async (seatId: string) => {
+    await supabase.from('seats').update({
+      status: 'available' as any,
+      current_user_id: null,
+      expiry_time: null,
+    }).eq('seat_id', seatId);
+
+    await supabase.from('bookings').delete().eq('seat_id', seatId);
   }, []);
 
-  const addSeat = useCallback((blockNumber: number) => {
-    const maxNum = Math.max(...seats.map(s => parseInt(s.seatId.replace('S', ''))), 0);
+  const addSeat = useCallback(async (blockNumber: number) => {
+    const maxNum = seats.length > 0
+      ? Math.max(...seats.map(s => parseInt(s.seatId.replace('S', ''))))
+      : 0;
     const seatId = `S${maxNum + 1}`;
-    const newSeat: Seat = {
-      seatId,
-      status: 'available',
-      currentUser: null,
-      expiryTime: null,
-      blockNumber,
-      qrToken: generateQRToken(seatId),
-    };
-    setSeats(prev => [...prev, newSeat]);
-    toast({ title: 'Seat added', description: `${newSeat.seatId} added to Block ${blockNumber} with unique QR code.` });
+
+    const { error } = await supabase.from('seats').insert({
+      seat_id: seatId,
+      status: 'available' as any,
+      block_number: blockNumber,
+      qr_token: generateQRToken(seatId),
+    });
+
+    if (!error) {
+      toast({ title: 'Seat added', description: `${seatId} added to Block ${blockNumber} with unique QR code.` });
+    }
   }, [seats, toast]);
 
-  const removeSeat = useCallback((seatId: string) => {
-    setSeats(prev => prev.filter(s => s.seatId !== seatId));
-    setBookings(prev => prev.filter(b => b.seatId !== seatId));
+  const removeSeat = useCallback(async (seatId: string) => {
+    await supabase.from('bookings').delete().eq('seat_id', seatId);
+    await supabase.from('seats').delete().eq('seat_id', seatId);
     toast({ title: 'Seat removed', description: `${seatId} has been removed.` });
   }, [toast]);
 
@@ -228,25 +300,27 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const toggleDarkMode = useCallback(() => setIsDarkMode(p => !p), []);
 
-  const fileComplaint = useCallback((userId: string, userName: string, seatId: string, bookingId: string, message: string) => {
-    const newComplaint: Complaint = {
-      complaintId: `CMP-${Date.now()}`,
-      userId,
-      userName,
-      seatId,
-      bookingId,
+  const fileComplaint = useCallback(async (userId: string, userName: string, seatId: string, bookingId: string, message: string) => {
+    const { error } = await supabase.from('complaints').insert({
+      user_id: userId,
+      user_name: userName,
+      seat_id: seatId,
+      booking_id: bookingId,
       message,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    };
-    setComplaints(prev => [...prev, newComplaint]);
-    toast({ title: '📩 Complaint filed', description: 'Your complaint has been sent to the admin.' });
+      status: 'pending' as any,
+    });
+
+    if (!error) {
+      toast({ title: '📩 Complaint filed', description: 'Your complaint has been sent to the admin.' });
+    }
   }, [toast]);
 
-  const updateComplaintStatus = useCallback((complaintId: string, status: ComplaintStatus, adminNote?: string) => {
-    setComplaints(prev => prev.map(c =>
-      c.complaintId === complaintId ? { ...c, status, adminNote: adminNote || c.adminNote } : c
-    ));
+  const updateComplaintStatus = useCallback(async (complaintId: string, status: ComplaintStatus, adminNote?: string) => {
+    await supabase.from('complaints').update({
+      status: status as any,
+      admin_note: adminNote,
+    }).eq('id', complaintId);
+
     toast({ title: 'Complaint updated', description: `Complaint marked as ${status}.` });
   }, [toast]);
 
@@ -254,7 +328,7 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     <LibraryContext.Provider value={{
       seats, bookings, userBookingsToday: [], bookSeat, checkIn, cancelBooking,
       releaseSeat, addSeat, removeSeat, getStats, hourlyData, analyticsHistory,
-      isDarkMode, toggleDarkMode, complaints, fileComplaint, updateComplaintStatus,
+      isDarkMode, toggleDarkMode, complaints, fileComplaint, updateComplaintStatus, loading,
     }}>
       {children}
     </LibraryContext.Provider>
