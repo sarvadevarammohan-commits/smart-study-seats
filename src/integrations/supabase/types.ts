@@ -14,16 +14,191 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          checked_in: boolean
+          created_at: string
+          end_time: string
+          id: string
+          seat_id: string
+          start_time: string
+          updated_at: string
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          checked_in?: boolean
+          created_at?: string
+          end_time: string
+          id?: string
+          seat_id: string
+          start_time: string
+          updated_at?: string
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          checked_in?: boolean
+          created_at?: string
+          end_time?: string
+          id?: string
+          seat_id?: string
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+          user_name?: string | null
+        }
+        Relationships: []
+      }
+      complaints: {
+        Row: {
+          admin_note: string | null
+          booking_id: string | null
+          created_at: string
+          id: string
+          message: string
+          seat_id: string
+          status: Database["public"]["Enums"]["complaint_status"]
+          updated_at: string
+          user_id: string
+          user_name: string
+        }
+        Insert: {
+          admin_note?: string | null
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          seat_id?: string
+          status?: Database["public"]["Enums"]["complaint_status"]
+          updated_at?: string
+          user_id: string
+          user_name?: string
+        }
+        Update: {
+          admin_note?: string | null
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          seat_id?: string
+          status?: Database["public"]["Enums"]["complaint_status"]
+          updated_at?: string
+          user_id?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          branch: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          roll_number: string
+          subject: string | null
+          updated_at: string
+          user_id: string
+          year: string | null
+        }
+        Insert: {
+          branch?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          roll_number?: string
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+          year?: string | null
+        }
+        Update: {
+          branch?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          roll_number?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+          year?: string | null
+        }
+        Relationships: []
+      }
+      seats: {
+        Row: {
+          block_number: number
+          created_at: string
+          current_user_id: string | null
+          expiry_time: string | null
+          id: string
+          qr_token: string
+          seat_id: string
+          status: Database["public"]["Enums"]["seat_status"]
+          updated_at: string
+        }
+        Insert: {
+          block_number: number
+          created_at?: string
+          current_user_id?: string | null
+          expiry_time?: string | null
+          id?: string
+          qr_token?: string
+          seat_id: string
+          status?: Database["public"]["Enums"]["seat_status"]
+          updated_at?: string
+        }
+        Update: {
+          block_number?: number
+          created_at?: string
+          current_user_id?: string | null
+          expiry_time?: string | null
+          id?: string
+          qr_token?: string
+          seat_id?: string
+          status?: Database["public"]["Enums"]["seat_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "student" | "admin"
+      complaint_status: "pending" | "resolved" | "dismissed"
+      seat_status: "available" | "reserved" | "occupied"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +325,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["student", "admin"],
+      complaint_status: ["pending", "resolved", "dismissed"],
+      seat_status: ["available", "reserved", "occupied"],
+    },
   },
 } as const
