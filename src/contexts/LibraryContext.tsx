@@ -109,7 +109,16 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
         supabase.from('complaints').select('*').order('created_at', { ascending: false }),
       ]);
 
-      if (seatsRes.data) setSeats(seatsRes.data.map(mapSeatRow));
+      if (seatsRes.data) {
+        const sorted = seatsRes.data
+          .map(mapSeatRow)
+          .sort((a, b) => {
+            const numA = parseInt(a.seatId.replace('S', ''));
+            const numB = parseInt(b.seatId.replace('S', ''));
+            return numA - numB;
+          });
+        setSeats(sorted);
+      }
       if (bookingsRes.data) setBookings(bookingsRes.data.map(mapBookingRow));
       if (complaintsRes.data) setComplaints(complaintsRes.data.map(mapComplaintRow));
       setLoading(false);
