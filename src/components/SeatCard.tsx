@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Seat, Booking } from '@/types/library';
 
@@ -9,14 +9,14 @@ interface SeatCardProps {
   booking?: Booking;
 }
 
-const SeatCard: React.FC<SeatCardProps> = ({ seat, onClick, index, booking }) => {
+const SeatCard: React.FC<SeatCardProps> = memo(({ seat, onClick, index, booking }) => {
   const statusClass = `seat-${seat.status}`;
 
   return (
     <motion.button
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.03, type: 'spring', stiffness: 300 }}
+      transition={{ delay: index * 0.02, type: 'spring', stiffness: 300 }}
       whileHover={seat.status === 'available' ? { scale: 1.08 } : {}}
       whileTap={seat.status === 'available' ? { scale: 0.95 } : {}}
       onClick={() => onClick(seat)}
@@ -36,6 +36,12 @@ const SeatCard: React.FC<SeatCardProps> = ({ seat, onClick, index, booking }) =>
       )}
     </motion.button>
   );
-};
+}, (prev, next) => 
+  prev.seat.status === next.seat.status && 
+  prev.seat.seatId === next.seat.seatId && 
+  prev.booking?.id === next.booking?.id
+);
+
+SeatCard.displayName = 'SeatCard';
 
 export default SeatCard;
