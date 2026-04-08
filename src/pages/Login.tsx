@@ -122,7 +122,7 @@ const LoginPage: React.FC = () => {
 
   const selectRole = (r: UserRole) => {
     setRole(r);
-    setAuthMode('login');
+    setAuthMode(r === 'admin' ? 'login' : 'login');
     setEmail('');
     setPassword('');
     setName('');
