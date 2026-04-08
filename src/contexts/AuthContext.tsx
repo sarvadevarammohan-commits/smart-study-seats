@@ -97,10 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       subject: extra?.subject || '',
     }).eq('user_id', data.user.id);
 
-    // If admin role requested, add it (in production you'd verify this server-side)
-    if (role === 'admin') {
-      await supabase.from('user_roles').insert({ user_id: data.user.id, role: 'admin' });
-    }
+    // Admin roles are managed by the system, not self-assigned
 
     return true;
   }, []);
