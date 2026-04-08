@@ -122,7 +122,7 @@ const LoginPage: React.FC = () => {
 
   const selectRole = (r: UserRole) => {
     setRole(r);
-    setAuthMode('login');
+    setAuthMode(r === 'admin' ? 'login' : 'login');
     setEmail('');
     setPassword('');
     setName('');
@@ -255,13 +255,15 @@ const LoginPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Login / Signup tabs */}
-              <Tabs value={authMode} onValueChange={(v) => { setAuthMode(v as 'login' | 'signup'); setError(''); }}>
-                <TabsList className="w-full grid grid-cols-2">
-                  <TabsTrigger value="login">Login</TabsTrigger>
-                  <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                </TabsList>
-              </Tabs>
+              {/* Login / Signup tabs - only students can sign up */}
+              {role === 'student' ? (
+                <Tabs value={authMode} onValueChange={(v) => { setAuthMode(v as 'login' | 'signup'); setError(''); }}>
+                  <TabsList className="w-full grid grid-cols-2">
+                    <TabsTrigger value="login">Login</TabsTrigger>
+                    <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              ) : null}
 
               {authMode === 'signup' && (
                 <div className="space-y-1.5">
