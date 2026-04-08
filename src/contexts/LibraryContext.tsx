@@ -301,9 +301,12 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const getStats = useCallback(() => {
     const total = seats.length;
-    const available = seats.filter(s => s.status === 'available').length;
-    const reserved = seats.filter(s => s.status === 'reserved').length;
-    const occupied = seats.filter(s => s.status === 'occupied').length;
+    let available = 0, reserved = 0, occupied = 0;
+    for (const s of seats) {
+      if (s.status === 'available') available++;
+      else if (s.status === 'reserved') reserved++;
+      else occupied++;
+    }
     return { total, available, reserved, occupied };
   }, [seats]);
 
