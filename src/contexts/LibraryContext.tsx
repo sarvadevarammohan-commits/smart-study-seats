@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { Seat, Booking, SeatStatus, HourlyData, AnalyticsData, Complaint, ComplaintStatus } from '@/types/library';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface LibraryContextType {
   seats: Seat[];
@@ -91,6 +92,7 @@ function generateAnalyticsHistory(): AnalyticsData[] {
 }
 
 export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [seats, setSeats] = useState<Seat[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [complaints, setComplaints] = useState<Complaint[]>([]);
@@ -100,17 +102,12 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [analyticsHistory] = useState<AnalyticsData[]>(generateAnalyticsHistory);
   const { toast } = useToast();
 
-  // Initial data fetch
+  // Fetch seats immediately (public), but wait for auth for bookings/complaints
   useEffect(() => {
-    const fetchData = async () => {
-      const [seatsRes, bookingsRes, complaintsRes] = await Promise.all([
-        supabase.from('seats').select('*').order('seat_id'),
-        supabase.from('bookings').select('*').order('created_at', { ascending: false }),
-        supabase.from('complaints').select('*').order('created_at', { ascending: false }),
-      ]);
-
-      if (seatsRes.data) {
-        const sorted = seatsRes.data
+    const fetchSeats = async () => {
+      const { data } = await supabase.from('seats').select('*').order('seat_id');
+      if (data) {
+        const sorted = data
           .map(mapSeatRow)
           .sort((a, b) => {
             const numA = parseInt(a.seatId.replace('S', ''));
@@ -119,12 +116,26 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
           });
         setSeats(sorted);
       }
+      // If not authenticated, we're done loading
+      if (!isAuthenticated) setLoading(false);
+    };
+    fetchSeats();
+  }, []);
+
+  // Fetch bookings & complaints only when authenticated
+  useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
+    const fetchAuthData = async () => {
+      const [bookingsRes, complaintsRes] = await Promise.all([
+        supabase.from('bookings').select('*').order('created_at', { ascending: false }),
+        supabase.from('complaints').select('*').order('created_at', { ascending: false }),
+      ]);
       if (bookingsRes.data) setBookings(bookingsRes.data.map(mapBookingRow));
       if (complaintsRes.data) setComplaints(complaintsRes.data.map(mapComplaintRow));
       setLoading(false);
     };
-    fetchData();
-  }, []);
+    fetchAuthData();
+  }, [authLoading, isAuthenticated]);
 
   // Real-time subscriptions
   useEffect(() => {
