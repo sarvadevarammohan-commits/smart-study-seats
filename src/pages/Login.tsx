@@ -131,6 +131,8 @@ const LoginPage: React.FC = () => {
     setPassword('');
     setName('');
     setRollNumber('');
+    setCourse('');
+    setYear('');
     setError('');
     refreshCaptcha();
   };
