@@ -81,6 +81,8 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [rollNumber, setRollNumber] = useState('');
+  const [course, setCourse] = useState('');
+  const [year, setYear] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [captchaCode, setCaptchaCode] = useState(generateCaptcha);
