@@ -42,7 +42,10 @@ const StudentDashboard: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <p className="text-sm text-muted-foreground">Welcome back, <span className="font-semibold text-foreground">{user?.name}</span></p>
-            <p className="text-xs text-muted-foreground">{user?.branch} · {user?.year}</p>
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+              {user?.branch && <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium">{user.branch}</span>}
+              {user?.year && <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-accent/10 text-accent-foreground font-medium">{user.year}</span>}
+            </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-1.5">
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
