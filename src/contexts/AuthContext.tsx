@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { User, UserRole } from '@/types/library';
 import { supabase } from '@/integrations/supabase/client';
-import type { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
@@ -15,20 +14,15 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 async function fetchUserProfile(userId: string): Promise<User | null> {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .single();
+  const [profileRes, rolesRes] = await Promise.all([
+    supabase.from('profiles').select('*').eq('user_id', userId).single(),
+    supabase.from('user_roles').select('role').eq('user_id', userId),
+  ]);
 
-  const { data: roles } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', userId);
-
+  const profile = profileRes.data;
   if (!profile) return null;
 
-  const role: UserRole = roles?.some(r => r.role === 'admin') ? 'admin' : 'student';
+  const role: UserRole = rolesRes.data?.some(r => r.role === 'admin') ? 'admin' : 'student';
 
   return {
     userId: profile.user_id,
@@ -46,33 +40,45 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    // Safety timeout - never stay loading forever
-    const timeout = setTimeout(() => {
-      setLoading(false);
-    }, 5000);
+    mountedRef.current = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session: Session | null) => {
+    // 1. Listen for auth changes — NO await inside callback
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mountedRef.current) return;
       if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        setUser(profile);
+        // Fire-and-forget profile fetch
+        fetchUserProfile(session.user.id).then(profile => {
+          if (mountedRef.current) {
+            setUser(profile);
+            setLoading(false);
+          }
+        });
       } else {
         setUser(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // 2. Restore session from storage
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mountedRef.current) return;
       if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        setUser(profile);
+        fetchUserProfile(session.user.id).then(profile => {
+          if (mountedRef.current) {
+            setUser(profile);
+            setLoading(false);
+          }
+        });
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => {
-      clearTimeout(timeout);
+      mountedRef.current = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -96,16 +102,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
     if (error || !data.user) return false;
 
-    // Update profile with extra info
-    await supabase.from('profiles').update({
+    // Update profile with extra info (fire-and-forget, don't block)
+    supabase.from('profiles').update({
       name,
       roll_number: extra?.rollNumber || '',
       branch: extra?.branch || '',
       year: extra?.year || '',
       subject: extra?.subject || '',
-    }).eq('user_id', data.user.id);
-
-    // Admin roles are managed by the system, not self-assigned
+    }).eq('user_id', data.user.id).then(() => {});
 
     return true;
   }, []);
