@@ -112,6 +112,8 @@ const LoginPage: React.FC = () => {
       } else {
         const success = await signup(email, password, name, role, {
           rollNumber: role === 'student' ? rollNumber : 'ADMIN',
+          branch: role === 'student' ? course : '',
+          year: role === 'student' ? year : '',
         });
         if (!success) setError('Signup failed. Email may already be in use.');
       }
