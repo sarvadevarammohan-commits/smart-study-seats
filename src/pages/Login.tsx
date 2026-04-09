@@ -300,7 +300,20 @@ const LoginPage: React.FC = () => {
               {authMode === 'signup' && role === 'student' && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Roll Number</label>
-                  <Input type="text" value={rollNumber} onChange={e => setRollNumber(e.target.value)} placeholder="e.g. 22CS101" />
+                  <Input type="text" value={rollNumber} onChange={e => setRollNumber(e.target.value)} placeholder="e.g. 22CS101" required />
+                </div>
+              )}
+
+              {authMode === 'signup' && role === 'student' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Course / Branch</label>
+                    <Input type="text" value={course} onChange={e => setCourse(e.target.value)} placeholder="e.g. CSE, ECE" required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Year</label>
+                    <Input type="text" value={year} onChange={e => setYear(e.target.value)} placeholder="e.g. 2nd Year" required />
+                  </div>
                 </div>
               )}
 
