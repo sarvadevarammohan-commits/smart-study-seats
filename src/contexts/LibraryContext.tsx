@@ -23,6 +23,7 @@ interface LibraryContextType {
   fileComplaint: (userId: string, userName: string, seatId: string, bookingId: string, message: string) => void;
   updateComplaintStatus: (complaintId: string, status: ComplaintStatus, adminNote?: string) => void;
   loading: boolean;
+  refreshData: () => Promise<void>;
 }
 
 const LibraryContext = createContext<LibraryContextType | null>(null);
@@ -347,11 +348,29 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     toast({ title: 'Complaint updated', description: `Complaint marked as ${status}.` });
   }, [toast]);
 
+  const refreshData = useCallback(async () => {
+    const [seatsRes, bookingsRes, complaintsRes] = await Promise.all([
+      supabase.from('seats').select('*').order('seat_id'),
+      supabase.from('bookings').select('*').order('created_at', { ascending: false }),
+      supabase.from('complaints').select('*').order('created_at', { ascending: false }),
+    ]);
+    if (seatsRes.data) {
+      const sorted = seatsRes.data.map(mapSeatRow).sort((a, b) => {
+        const numA = parseInt(a.seatId.replace('S', ''));
+        const numB = parseInt(b.seatId.replace('S', ''));
+        return numA - numB;
+      });
+      setSeats(sorted);
+    }
+    if (bookingsRes.data) setBookings(bookingsRes.data.map(mapBookingRow));
+    if (complaintsRes.data) setComplaints(complaintsRes.data.map(mapComplaintRow));
+  }, []);
+
   return (
     <LibraryContext.Provider value={{
       seats, bookings, userBookingsToday: [], bookSeat, checkIn, cancelBooking,
       releaseSeat, addSeat, removeSeat, getStats, hourlyData, analyticsHistory,
-      isDarkMode, toggleDarkMode, complaints, fileComplaint, updateComplaintStatus, loading,
+      isDarkMode, toggleDarkMode, complaints, fileComplaint, updateComplaintStatus, loading, refreshData,
     }}>
       {children}
     </LibraryContext.Provider>

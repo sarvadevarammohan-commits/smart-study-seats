@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useLibrary } from '@/contexts/LibraryContext';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
@@ -6,16 +6,26 @@ import SeatMap from '@/components/SeatMap';
 import AdminSeatQRCodes from '@/components/AdminSeatQRCodes';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts';
-import { Armchair, Users, Clock, AlertTriangle, Plus, Trash2, TrendingUp, Activity, QrCode, MessageSquareWarning, CheckCircle, XCircle } from 'lucide-react';
+import { Armchair, Users, Clock, AlertTriangle, Plus, Trash2, TrendingUp, Activity, QrCode, MessageSquareWarning, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { seats, bookings, getStats, hourlyData, analyticsHistory, addSeat, removeSeat, releaseSeat, complaints, updateComplaintStatus } = useLibrary();
+  const { seats, bookings, getStats, hourlyData, analyticsHistory, addSeat, removeSeat, releaseSeat, complaints, updateComplaintStatus, refreshData } = useLibrary();
   const [newBlock, setNewBlock] = useState('1');
+  const [refreshing, setRefreshing] = useState(false);
+  const { toast } = useToast();
   const stats = getStats();
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshData();
+    setRefreshing(false);
+    toast({ title: '✅ Synced', description: 'All data refreshed from server.' });
+  }, [refreshData, toast]);
 
   const noShowRate = analyticsHistory.length > 0
     ? Math.round(analyticsHistory.reduce((a, d) => a + d.noShows, 0) / analyticsHistory.reduce((a, d) => a + d.totalBookings, 0) * 100)
@@ -36,7 +46,13 @@ const AdminDashboard: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container max-w-5xl mx-auto px-4 py-6 space-y-6">
-        <p className="text-sm text-muted-foreground">Welcome, <span className="font-semibold text-foreground">{user?.name}</span></p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">Welcome, <span className="font-semibold text-foreground">{user?.name}</span></p>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-1.5">
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Syncing...' : 'Refresh'}
+          </Button>
+        </div>
         {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <AdminStat icon={<Armchair className="w-5 h-5 text-primary" />} label="Total Seats" value={stats.total} />
