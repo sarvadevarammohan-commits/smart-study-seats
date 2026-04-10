@@ -23,6 +23,7 @@ interface LibraryContextType {
   fileComplaint: (userId: string, userName: string, seatId: string, bookingId: string, message: string) => void;
   updateComplaintStatus: (complaintId: string, status: ComplaintStatus, adminNote?: string) => void;
   loading: boolean;
+  refreshData: () => Promise<void>;
 }
 
 const LibraryContext = createContext<LibraryContextType | null>(null);

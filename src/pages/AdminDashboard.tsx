@@ -46,7 +46,13 @@ const AdminDashboard: React.FC = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container max-w-5xl mx-auto px-4 py-6 space-y-6">
-        <p className="text-sm text-muted-foreground">Welcome, <span className="font-semibold text-foreground">{user?.name}</span></p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">Welcome, <span className="font-semibold text-foreground">{user?.name}</span></p>
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="gap-1.5">
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Syncing...' : 'Refresh'}
+          </Button>
+        </div>
         {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <AdminStat icon={<Armchair className="w-5 h-5 text-primary" />} label="Total Seats" value={stats.total} />
