@@ -14,9 +14,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { seats, bookings, getStats, hourlyData, analyticsHistory, addSeat, removeSeat, releaseSeat, complaints, updateComplaintStatus } = useLibrary();
+  const { seats, bookings, getStats, hourlyData, analyticsHistory, addSeat, removeSeat, releaseSeat, complaints, updateComplaintStatus, refreshData } = useLibrary();
   const [newBlock, setNewBlock] = useState('1');
+  const [refreshing, setRefreshing] = useState(false);
+  const { toast } = useToast();
   const stats = getStats();
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshData();
+    setRefreshing(false);
+    toast({ title: '✅ Synced', description: 'All data refreshed from server.' });
+  }, [refreshData, toast]);
 
   const noShowRate = analyticsHistory.length > 0
     ? Math.round(analyticsHistory.reduce((a, d) => a + d.noShows, 0) / analyticsHistory.reduce((a, d) => a + d.totalBookings, 0) * 100)
