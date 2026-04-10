@@ -157,7 +157,7 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .channel('realtime-bookings')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setBookings(prev => [mapBookingRow(payload.new), ...prev]);
+          setBookings(prev => prev.some(b => b.id === payload.new.id) ? prev : [mapBookingRow(payload.new), ...prev]);
         } else if (payload.eventType === 'UPDATE') {
           setBookings(prev => prev.map(b => b.id === payload.new.id ? mapBookingRow(payload.new) : b));
         } else if (payload.eventType === 'DELETE') {
