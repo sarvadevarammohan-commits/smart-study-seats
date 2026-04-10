@@ -92,11 +92,17 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
       scannerRef.current = scanner;
       await scanner.start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 220, height: 220 } },
+        {
+          fps: 15,
+          qrbox: { width: 280, height: 280 },
+          aspectRatio: 1.0,
+          disableFlip: false,
+          experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+        },
         (decodedText) => {
           processQrData(decodedText);
         },
-        () => {} // ignore errors during scanning
+        () => {}
       );
       setScanning(true);
     } catch (err: any) {
