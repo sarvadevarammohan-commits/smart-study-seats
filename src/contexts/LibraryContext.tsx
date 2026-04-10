@@ -223,19 +223,27 @@ export const LibraryProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     // Create booking
-    const { error: bookingError } = await supabase.from('bookings').insert({
+    const { data: bookingData, error: bookingError } = await supabase.from('bookings').insert({
       user_id: userId,
       seat_id: seatId,
       start_time: startTime.toISOString(),
       end_time: endTime.toISOString(),
       checked_in: false,
       user_name: userName,
-    });
+    }).select().single();
 
     if (bookingError) {
       toast({ title: 'Booking failed', description: bookingError.message, variant: 'destructive' });
       return false;
     }
+
+    // Optimistically add booking to local state so it appears instantly
+    if (bookingData) {
+      setBookings(prev => [mapBookingRow(bookingData), ...prev]);
+    }
+
+    // Optimistically update seat in local state
+    setSeats(prev => prev.map(s => s.seatId === seatId ? { ...s, status: 'reserved' as SeatStatus, currentUserId: userId, expiryTime: checkInDeadline.toISOString() } : s));
 
     const durMins = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
     const durLabel = durMins >= 60 ? `${(durMins / 60).toFixed(1).replace('.0', '')} hr${durMins > 60 ? 's' : ''}` : `${durMins} min`;
