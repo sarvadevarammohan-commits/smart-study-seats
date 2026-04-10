@@ -38,8 +38,35 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
   const processQrData = async (decodedText: string) => {
     if (!pendingBooking || !user) return;
     try {
-      const data = JSON.parse(decodedText);
-      const seat = seats.find(s => s.seatId === data.seatId && s.qrToken === data.qrToken);
+      let data: any;
+      try {
+        data = JSON.parse(decodedText);
+      } catch {
+        // Fuzzy match: try to extract seatId and partial qrToken from raw text
+        const seatMatch = decodedText.match(/S\d+/i);
+        const tokenMatch = decodedText.match(/QR-S\d+-\w{4,}/i);
+        if (seatMatch) {
+          data = { seatId: seatMatch[0].toUpperCase(), qrToken: tokenMatch?.[0] || '' };
+        } else {
+          toast({ title: 'Invalid QR', description: 'Could not read QR code data.', variant: 'destructive' });
+          return;
+        }
+      }
+
+      // Approximate matching: match seat by seatId, then verify token with partial/fuzzy match
+      const seat = seats.find(s => {
+        if (s.seatId !== data.seatId) return false;
+        // Exact match
+        if (s.qrToken === data.qrToken) return true;
+        // Partial match: if at least 6 chars of the token match anywhere
+        if (data.qrToken && data.qrToken.length >= 6 && s.qrToken.includes(data.qrToken.slice(0, 6))) return true;
+        if (data.qrToken && s.qrToken && data.qrToken.includes(s.qrToken.slice(0, 8))) return true;
+        // Token starts with same prefix (QR-SeatId-)
+        const prefix = `QR-${s.seatId}-`;
+        if (data.qrToken && data.qrToken.startsWith(prefix) && s.qrToken.startsWith(prefix)) return true;
+        return false;
+      });
+
       if (!seat) {
         toast({ title: 'Invalid QR', description: 'QR code does not match any valid seat.', variant: 'destructive' });
         return;
