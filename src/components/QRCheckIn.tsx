@@ -97,8 +97,7 @@ const QRCheckIn: React.FC<QRCheckInProps> = ({ open, onClose, bookings }) => {
           qrbox: { width: 280, height: 280 },
           aspectRatio: 1.0,
           disableFlip: false,
-          experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-        },
+        } as any,
         (decodedText) => {
           processQrData(decodedText);
         },
